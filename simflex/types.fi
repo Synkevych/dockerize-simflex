@@ -1,0 +1,28 @@
+      type SrcRecptFun
+!definitions of undeclared variables in comments are described in module SIMFLEX
+      
+         real,allocatable::srs(:,:,:,:) !srs calculated by FLEXPART for a given observation; 
+!size: nlon x nlat x nhgt x nt
+
+         real,allocatable::srstsum(:,:,:) !time integrated srs calculated by FLEXPART 
+!size: nlon x nlat x nhgt 
+
+         real,allocatable::srsred(:,:,:) !srs calculated by FLEXPART for a given observation
+! in selected grid nodes; size: nt x nhgt x nselect; (in case of all grid nodes nselect=nlon x nlat)
+! 1st index is time to optimize time minimization
+
+         integer nt ! number of time layers for a given srs
+         integer id_obs ! id of observation to which this srs corresponds
+
+!NOTE: START DATE_TIME OF FLEXPART BACKWARD RUN IS LATER THAN END DATE_TIME OF THE RESPECTIVE RUN
+! START TIME OF MINIMIZATION SIMULATION TIME IS EARLIER THAN END DATE_TIME OF THE RESPECTIVE RUN
+
+         real,allocatable::times(:) ! times in sec related to start time of Flexpart backward run (time from nc file of FLEXPART)
+         real,allocatable::timed2(:) ! times in days related to end time of Flexpart backward run (start time of minimization problem)
+         real timedmax ! start time of backward FLEXPART run (in days) in time reference frame related to end time of FLEXPART backward run
+
+         character*8 ibdate,iedate ! end and start dates of flexpart simulation
+         character*6 ibtime,ietime ! end and start dates of flexpart simulation
+
+      end type
+      

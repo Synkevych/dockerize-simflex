@@ -1,0 +1,1 @@
+gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/  -lnetcdff  -lnetcdf  -o simflex
