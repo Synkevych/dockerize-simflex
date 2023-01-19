@@ -61,7 +61,7 @@ def get_xml_params():
   }
 
 with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
-  csv_reader = csv.reader(csvfile, delimiter='\t')
+  csv_reader = csv.reader(csvfile, delimiter=' ')
   csv_header = next(csv_reader)
   for row in csv_reader:
       # name of params in row and it's order:
@@ -288,7 +288,7 @@ for param in releases_params:
   logging.info('Running FLEXPART ' + str(output_file_id) +
                ' iteration in ' + str(len(releases_params)) + '.')
   parse_releases_file(param)
-  rc = run("time ./FLEXPART", shell=True)
+  rc = run("time FLEXPART_MPI", shell=True)
   # move output prognose to simflex folder and rename it according to the release comments
   output_file_name = '/grid_time_' + end_date_time_str
   old_output_file_path = basename + '/output' + output_file_name + '.nc'
