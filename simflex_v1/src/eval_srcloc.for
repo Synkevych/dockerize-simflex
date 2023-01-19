@@ -2,10 +2,10 @@
 ! obtained assuming continuous release with constant  rate in the respective node
 !present implementation only for sources at single vertical level (single vertical level in srs)
       subroutine eval_srcloc()
-      use SIMFLEX,only:Nobs,id_obs,Obs_val1,AllSRS,
-     &MaxCor0,Imax0,Jmax0,normcor0,nlon,nlat,MAXOBS,gridcells,
-     &lon,lat,Niso,Prob_iso,Isolines,normcorname,ifdebug_out,
-     &normcor_debug                   
+      use SIMFLEX,only:Nobs,Obs_val1,AllSRS,MaxCor0,Imax0,
+     &Jmax0,normcor0,nlon,nlat,MAXOBS,gridcells,lon,lat,
+     &Niso,Prob_iso,Isolines,normcorname,ifdebug_out,
+     &normcor_debug
      
       implicit none
       integer i,j,k
@@ -21,7 +21,7 @@
       normcor0=0
       MaxCor0=0;
       
-!calculate correlation      
+!calculate correlation
       do j=1,nlat
        do i=1,nlon
          do k=1,Nobs
@@ -44,11 +44,11 @@
 
       write(6,*)'MaxCor0=',MaxCor0
 
-!evaluate of probabilities of solurce location in regions within isolines of normcor0     
+!evaluate of probabilities of solurce location in regions within isolines of normcor0
       call eval_probloc(Niso,Prob_Iso,Isolines,normcor0,nlon,nlat)
 
 
-! output results      
+! output results
        open(1110,FILE=normcorname)
        if(ifdebug_out)open(1111,FILE=normcor_debug)
        write(1111,*)'cell_id,lon,lat,normcor'
@@ -103,5 +103,5 @@
         enddo
       enddo
       Prob_iso=Prob_iso/SumAll
-      
+
       end subroutine eval_probloc

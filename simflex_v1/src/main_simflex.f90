@@ -18,7 +18,7 @@
     use SIMFLEX,only:lat,lon,nlon,nlat,Nobs,AllSRS,id_obs,&
      Obs_Correct,nhgt,create_grid,PassInpSettings,&
      syear,smon,sday,shr,sminut,loutstep,min_duration,tstart_max, &
-     thresh_start,dlon,dlat, DHgt,outlon0,outlat0,&
+     thresh_start,dlon,dlat,DHgt,&
      def_maxtsrcind,def_ndur_min,def_tstartmax ! - these are subroutines
    
 
@@ -114,8 +114,6 @@
      
      dlon=dlon_
      dlat=dlat_
-     outlon0=outlon_
-     outlat0=outlat_
      nlon=nlon_
      nlat=nlat_
      DHgt=DHgt_

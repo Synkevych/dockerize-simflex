@@ -3,6 +3,7 @@
       use SIMFLEX,only:Niso,Isolines,Prob_iso,Threshprob,iso1
       implicit none
       integer k
+
       iso1=0
       do k=Niso,1,-1
         if(Prob_iso(k).ge.Threshprob)then
@@ -21,13 +22,13 @@
           write(6,*)'Alternatively number of isolines in Isolines'
           write(6,*)'array as input by user, should be increased'
           write(6,*)' '
-          
+
           iso1=Isolines(1)
        endif
-       
+
         write(6,*)'Result of isoselect:'
         write(6,*)'release start time, duration and mass will'
         write(6,*)'be evaluated in cells with normalized corr. coef. '
         write(6,*)'greater or equal than iso1=',iso1
         write(6,*)' '
-      end subroutine 
+      end subroutine

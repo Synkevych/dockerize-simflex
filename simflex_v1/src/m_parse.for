@@ -1,4 +1,4 @@
-!Adapted from example code in
+! Adapted from example code in
 ! community.intel.com/t5/Intel-Fortran-Compiler/Trouble-reading-a-csv-file/m-p/1034133#M111406
       module parse
       integer, parameter :: MAX_LINE = 1024    ! you determine the size of line
@@ -26,20 +26,3 @@
         endif
        end function getArg
       end module parse
-    
-!program lineParse
-!    use parse
-!    implicit none
-
-    ! Variables
-!    CHARACTER(20) :: str1; str2; str3; str4; str5
-    ! Body of lineParse
-!    line = 'value-a; value-bcd; value ef; value-ghi'    ! simulate read of line
-!    str1 = getArg(1)
-!    str2 = getArg(2)
-!    str3 = getArg(3)
-!    str4 = getArg(4)
-!    str5 = getArg(5)
-!   print *, str1, str2, str3, str4, str5
-
-! end program lineParse
