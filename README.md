@@ -48,19 +48,24 @@ Open Multi-Processing ([OpenMP](http://www.openmp.org/))
 
 ### Performance test
 
-|Type| Flexpart version|Input dates start/end|Loutstep|Parts|Calc Times|
-|-|-|-|-|-|-|
-|1 Server|Serial*|20200418/21 0/0|360|10000|5280s or 1h23m|
-|1 Server|Serial(-j 8)*|20200418/21 0/0|360|10000|5246s|
-|1 Server|MPI(-j 12)**|20200418/21 0/0|360|10000|7m46.718s|
-|1 Server|MPI(-j 8)**|20200418/21 0/0|360|10000|7m47.168s|
-|1 Server|MPI(-j 4)**|20200418/21 0/0|360|10000|7m46.115s|
-|2 Docker container|Serial|20200418/21 0/0|360|10000|0s|
-|2 Docker container|MPI|20200418/21 0/0|360|10000|0s|
-|2 Docker container|MPI 4 core|20200418/19 0/13|3600|10000|1h35m28s|
+- Simulation direction – backward
+- Species №18 or Ru-106
+- Input IBDATE 20200418, IBTIME 000000, IEDATE 20200421, IETIME 130010 (other paramethers in [test](/flexpart_v10.4/test/) folder)
 
-'*' - single core (didn't use -j parameter)
-'**' - multiply core using open-mpi
+> Serial - single core, MPI – multiply core using open-mpi.
+
+|Where|Type|Model name|CPU(s)|Loutstep|Parts|Calc Times|
+|-|-|:-:|:-:|:-:|:-:|:-:|
+|Server|MPI|Intel Xeon Gold 6240 2.6GHz(85)|72|3600|10000|3977s or 66m|
+|Server|Serial||||10000|5280s or 83m|
+|Server|Serial|||360|10000|5246s|
+|Server|MPI|||360|10000|7m46.718s|
+|Server|MPI|||360|10000|7m47.168s|
+|Server|MPI|||360|10000|7m46.115s|
+|Docker|Serial|Intel Core i5-8250U 1.6GHs(142)|4|3600|10000|0s|
+|Docker|MPI|||360|10000|0s|
+|Docker|MPI|||3600|10000|1h35m28s|
+
 
 > make [-j] mpi ncf=yes - Compile parallel FLEXPART
 > make [-j] serial ncf=yes - Compile serial FLEXPART
