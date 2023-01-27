@@ -62,9 +62,9 @@ Open Multi-Processing ([OpenMP](http://www.openmp.org/))
 |Server|MPI|||360|10000|7m46.718s|
 |Server|MPI|||360|10000|7m47.168s|
 |Server|MPI|||360|10000|7m46.115s|
-|Docker|Serial|Intel Core i5-8250U 1.6GHs(142)|4|3600|10000|0s|
-|Docker|MPI|||360|10000|0s|
+|Docker|Serial|Intel Core i5-8250U 1.6GHs(142)|4|3600|10000|16200s or 270m|
 |Docker|MPI|||3600|10000|1h35m28s|
+|Docker|MPI|Apple M1(ARM64)|8|3600|10000|43200s or 720m|
 
 
 > make [-j] mpi ncf=yes - Compile parallel FLEXPART
