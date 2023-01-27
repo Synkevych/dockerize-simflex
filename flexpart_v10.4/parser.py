@@ -30,8 +30,10 @@ if not os.path.exists(basename + simflex_input_path):
 if not os.path.exists('output'):
     os.makedirs('output')
 
-def write_to_file(file_name, contents, mode='w'):
-  file = open(basename + file_name, mode)
+def write_to_file(folder_name, file_name, contents, mode='w'):
+  full_file_path = basename + folder_name + file_name
+
+  file = open(full_file_path, mode)
   file.write(contents)
   file.close()
   logging.info('Parsing {0} file compleated.'.format(file_name))
@@ -133,7 +135,7 @@ def parse_command_file():
            date_2=end_date_time.strftime('%Y%m%d'),
            time_2=end_date_time.strftime('%H%M%S'),
            loutstep=user_params['loutstep'])
-  write_to_file('/options/COMMAND', template_header + command_body)
+  write_to_file('/options/', 'COMMAND', template_header + command_body)
 
 def parse_outgrid_file():
   outgrid_template = """!*******************************************************************************
@@ -165,25 +167,23 @@ def parse_outgrid_file():
           dx_out=user_params['dx_out'],
           dy_out=user_params['dy_out'],
           maxheight=user_params['maxheight'])
-  write_to_file('/options/OUTGRID', outgrid_template)
+  write_to_file('/options/', 'OUTGRID', outgrid_template)
 
 
 def parse_simflex_input_paths(id, file_path):
-  flexpart_output_header = """#obs_id; path_to_file; srs_id;
+  filename = 'table_srs_paths.txt'
+  file_header = """#obs_id; path_to_file; srs_id;
 """
-  flexpart_output_template = """{obs_id}; {path_to_file}; {srs_id}
+  file_content = """{obs_id}; {path_to_file}; {srs_id}
 """.format(obs_id=id, path_to_file=file_path, srs_id=1)
-  full_file_name = simflex_input_path + 'table_srs_paths.txt'
 
-  if id > 1:
-    write_to_file(full_file_name, flexpart_output_template, 'a')
+  if not os.path.isfile(file_path):
+    write_to_file(simflex_input_path, filename, file_header + file_content)
   else:
-    write_to_file(full_file_name, flexpart_output_header +
-                  flexpart_output_template)
+    write_to_file(simflex_input_path, filename, file_content, 'a')
 
 def parse_simflexinp():
   start_date_time = user_params['start_date_time']
-  full_file_name = simflex_input_path + 'simflexinp.nml'
   simflexinp_template = """$simflexinp
 redirect_console=.false.,
 Niso_=11,
@@ -221,7 +221,7 @@ $end
           ny=user_params['num_y_grid'],
           minheight=user_params['minheight'],
           maxheight=user_params['maxheight'])
-  write_to_file(full_file_name, simflexinp_template)
+  write_to_file(simflex_input_path, 'simflexinp.nml', simflexinp_template)
 
 def parse_releases_file(releases_params):
   SPECIES_BY_ID = {"O3": '002', "NO": '003', "NO2": '004',
@@ -270,7 +270,7 @@ def parse_releases_file(releases_params):
              minheight=user_params['minheight'],
              maxheight=user_params['maxheight'])
 
-  write_to_file('/options/RELEASES', template_header +
+  write_to_file('/options/', 'RELEASES', template_header +
                 release_header + release_body)
 
 user_params = get_xml_params()
@@ -283,37 +283,33 @@ parse_command_file()
 parse_outgrid_file()
 parse_simflexinp()
 
-output_file_id = 1
 end_date_time_str = (
     releases_params[-1]['end_date_time'] + timedelta(hours=1)).strftime('%Y%m%d%H%M%S')
 output_filename_prefix = 'grid_time_' + end_date_time_str
 
 for param in releases_params:
-  # move output prognose to simflex folder and rename it according to the release comments
+  # move output prognose to simflex folder and rename it according to the release id
   old_output_file_path = basename + '/output/' + output_filename_prefix + '.nc'
   new_output_file_path = basename + simflex_input_path + \
-      output_filename_prefix + '_' + str(output_file_id) + '.nc'
+      output_filename_prefix + '_' + param['id'] + '.nc'
 
-  # continue from the last successfull calculation
+  # skip calculation if output file exist
   if not os.path.isfile(new_output_file_path):
     parse_releases_file(param)
-    logging.info('Running FLEXPART {0} iteration in {1}.'.format(
-        output_file_id,len(releases_params)))
+    logging.info('Running FLEXPART iteration in {1}.'.format(
+        param['id'], len(releases_params)))
     rc = run("time FLEXPART_MPI", shell=True)
 
     if os.path.isfile(old_output_file_path):
       os.rename(old_output_file_path,  new_output_file_path)
-      parse_simflex_input_paths(output_file_id, new_output_file_path)
+      parse_simflex_input_paths(param['id'], new_output_file_path)
       logging.info('FLEXPART completed calculation.\n')
     else:
-      message = "Flexpart calculation didn't complete successful for {0} release, check the outputs or input parameters.".logging.error(
-          message)
+      message = "Flexpart calculation didn't complete successful for {0} release, check the outputs or input parameters.".format(param['id'])
       logging.error(message)
       sys.exit(message)
-    output_file_id = output_file_id + 1
   else:
-    message = 'Skip calculation, output file for {0} release exist'.logging.error(message)
+    message = 'Skip calculation, output file for {0} release exist'.format(param['id'])
     print(message)
     logging.info(message)
-    output_file_id = output_file_id + 1
     continue
