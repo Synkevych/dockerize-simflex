@@ -17,6 +17,8 @@ XXXXXX EMPTY LINES XXXXXXXX
 YYYYMMDD HHMMSS      name of the file(up to 80 characters)
 """
 
+logging.info('Started loading grib data.')
+
 def write_to_file(file_name, contents, mode='w'):
   file = open(basename + '/' + file_name, mode)
   file.write(contents)
@@ -73,7 +75,6 @@ def download_grib(date_start=None, date_end=None):
           start_forecast_date.strftime('%Y%m%d_%H%M_') + forecast_suffix + ".grb2"
       path_to_file = os.path.join(DATA_FOLDER + '/', file_name)
       # test if file exist
-      print('file_name', file_name)
       if os.path.isfile(path_to_file):
         print("File", file_name, " exist.")
         parse_available_file(end_forecast_date, file_name)
@@ -85,3 +86,6 @@ def download_grib(date_start=None, date_end=None):
         parse_available_file(end_forecast_date, file_name)
       end_forecast_date = start_forecast_date = end_forecast_date + \
           timedelta(hours=3)
+
+
+logging.info('Finished loading grib data and filling AVAILABLE file.\n')
