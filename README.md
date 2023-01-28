@@ -1,6 +1,11 @@
 # dockerize-simflex
 
-Flexpart conternization with simflex
+Flexpart conternization with simflex.  
+To make Flexpart work you should install all required libraries and provide required inputs. This project is created to make it easy all steps explained previously .
+
+## Flexpart
+
+FLEXPART (“FLEXible PARTicle dispersion model”) is a Lagrangian transport and dispersion model suitable for the simulation of a large range of atmospheric transport processes. Apart from transport and turbulent diffusion, it is able to simulate dry and wet deposition, decay, linear chemistry; it can be used in forward or backward mode, with defined sources or in a domain-filling setting. It can be used from local to global scale.
 
 ## How to use
 
@@ -13,7 +18,9 @@ Flexpart conternization with simflex
 5. Delete image
 6. Increase performance by adding more cores and memory
 
-## Changes in Flexpart
+## Changes from the origin
+
+### Changes in Flexpart
 
 1. File <par_mod.f90>
 
@@ -46,7 +53,7 @@ The model scales well up to using 256 processors, with a parallel efficiency gre
 
 Open Multi-Processing ([OpenMP](http://www.openmp.org/))
 
-### Performance test
+## Performance test
 
 - Simulation direction – backward
 - Species №18 or Ru-106
@@ -67,7 +74,7 @@ Open Multi-Processing ([OpenMP](http://www.openmp.org/))
 |Docker|MPI|Apple M1(ARM64)|8|3600|10000|43200s or 720m|
 
 
-> make [-j] mpi ncf=yes - Compile parallel FLEXPART
+> make [-j] mpi ncf=yes - Compile parallel FLEXPART. 
 > make [-j] serial ncf=yes - Compile serial FLEXPART
 
 ## Resources
