@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta, date
-import os, urllib.request
+import logging, os, urllib.request
+
+logging.basicConfig(filename="parsing.log", level=logging.INFO,
+                    format="%(asctime)s %(message)s")
 
 # 2 month equal to 44 Gb / calc speed and time needed to downloads this data
 

@@ -5,7 +5,7 @@
        real a(n),b(n),res
        
        integer i
-       real ab,am,bm,a2,b2,sigprod
+       real ab,am,bm,a2,b2
        
        res=0
        if(maxval(a(1:n))-minval(a(1:n)).eq.0.)return
@@ -29,9 +29,7 @@
        bm=bm/real(n)
        a2=a2/real(n)
        b2=b2/real(n)
-       
-       
-       
+
        res=(ab-am*bm)/((a2-am**2)*(b2-bm**2))**0.5
-       
+
        end subroutine
