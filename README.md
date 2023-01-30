@@ -7,6 +7,28 @@ To make Flexpart work you should install all required libraries and provide requ
 
 FLEXPART (“FLEXible PARTicle dispersion model”) is a Lagrangian transport and dispersion model suitable for the simulation of a large range of atmospheric transport processes. Apart from transport and turbulent diffusion, it is able to simulate dry and wet deposition, decay, linear chemistry; it can be used in forward or backward mode, with defined sources or in a domain-filling setting. It can be used from local to global scale.
 
+## How parsing works
+
+#### Creating COMMAND file for flexpart inputs
+
+![Command file](/docs/command.png)
+
+#### Creating OUTGRID file for flexpart inputs
+
+![Outgrid file](/docs/outgrid.png)
+
+#### Creating simflexinp.nml for simflex inputs
+
+![Simflexinp.nml file](/docs/simflexinp.png)
+
+#### Creating RELEASES file for flexpart on each iteration
+
+![Releases file](/docs/releases.png)
+
+#### Creating or updating table_srs_paths.txt file for simlex on each iteration
+
+![Table_srs_paths file](/docs/table_srs_paths.png)
+
 ## How to use
 
 1. Build the image locally in the `dockerize-simflex` folder:
