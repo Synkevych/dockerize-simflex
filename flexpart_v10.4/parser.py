@@ -289,6 +289,7 @@ for param in releases_params:
                ' iteration in ' + str(len(releases_params)) + '.')
   parse_releases_file(param)
   rc = run("time FLEXPART_MPI", shell=True)
+  rc = run("""echo \"Finished {i} calculation\"""".format(i=output_file_id), shell=True)
   # move output prognose to simflex folder and rename it according to the release comments
   output_file_name = '/grid_time_' + end_date_time_str
   old_output_file_path = basename + '/output' + output_file_name + '.nc'
