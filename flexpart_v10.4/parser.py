@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import logging
 import csv
 import xml.etree.ElementTree as ET
@@ -12,7 +13,7 @@ logging.basicConfig(filename="parsing.log", level=logging.INFO,
                     format="%(asctime)s %(message)s")
 
 basename = os.getcwd()
-simflex_dir_name = basename + '/simflex'
+simflex_input_path = '/simflex/input/'
 template_header = """***************************************************************************************************************
 *                                                                                                             *
 *   Input file for the Lagrangian particle dispersion model FLEXPART                                           *
@@ -23,16 +24,19 @@ template_header = """***********************************************************
 user_params = {}
 releases_params = []
 
-if not os.path.exists('simflex'):
-    os.makedirs('simflex')
+if not os.path.exists(basename + simflex_input_path):
+  os.makedirs(basename + simflex_input_path)
 
 if not os.path.exists('output'):
     os.makedirs('output')
 
-def write_to_file(file_name, contents, mode='w'):
-  file = open(basename + file_name, mode)
+def write_to_file(folder_name, file_name, contents, mode='w'):
+  full_file_path = basename + folder_name + file_name
+
+  file = open(full_file_path, mode)
   file.write(contents)
   file.close()
+  logging.info('Parsing {0} file compleated.'.format(file_name))
 
 
 def get_xml_params():
@@ -46,6 +50,7 @@ def get_xml_params():
   ny = (xml_root.find('ny').text).split('.')[0]
   loutstep = xml_root.find('loutstep').text if xml_root.find(
       'loutstep') is not None else '3600'
+  min_height = xml_root.find('minheight').text if float(xml_root.find('minheight').text) > 1 else '1'
   return {
       'start_date_time': start_date_time,
       'end_date_time': end_date_time,
@@ -55,7 +60,7 @@ def get_xml_params():
       'num_y_grid': ny,
       'dx_out': xml_root.find('dlat').text,
       'dy_out': xml_root.find('dlon').text,
-      'minheight': xml_root.find('minheight').text,
+      'minheight': min_height,
       'maxheight': xml_root.find('maxheight').text,
       'loutstep': loutstep
   }
@@ -77,6 +82,7 @@ with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
       end_date_time = datetime.strptime(
           row[12] + row[13], '%Y-%m-%d%H:%M:%S')
       species_mass = "{:e}".format(float(row[14]))
+
       releases_params.append({
           'id': measurement_id,
           'latitude_1': round(latitude_1,3),
@@ -129,8 +135,7 @@ def parse_command_file():
            date_2=end_date_time.strftime('%Y%m%d'),
            time_2=end_date_time.strftime('%H%M%S'),
            loutstep=user_params['loutstep'])
-  write_to_file('/options/COMMAND', template_header + command_body)
-  logging.info('Parsing COMMAND file compleated.')
+  write_to_file('/options/', 'COMMAND', template_header + command_body)
 
 def parse_outgrid_file():
   outgrid_template = """!*******************************************************************************
@@ -162,20 +167,20 @@ def parse_outgrid_file():
           dx_out=user_params['dx_out'],
           dy_out=user_params['dy_out'],
           maxheight=user_params['maxheight'])
-  write_to_file('/options/OUTGRID', outgrid_template)
-  logging.info('Parsing OUTGRID file compleated.')
+  write_to_file('/options/', 'OUTGRID', outgrid_template)
 
 
-def parse_simflex_input(id, new_output_file_path):
-  flexpart_output_header = """#id_obs; path_to_file; srs_ind;
+def parse_simflex_input_paths(id, file_path):
+  filename = 'table_srs_paths.txt'
+  file_header = """#obs_id;path_to_file;srs_id;
 """
-  flexpart_output_template = """{obs_id}; {path_to_file}; {srs_id}
-""".format(obs_id=id, path_to_file=new_output_file_path, srs_id=1)
-  table_srs_file_name = '/simflex' + '/table_srs_paths.txt'
-  if id > 1:
-    write_to_file(table_srs_file_name, flexpart_output_template, 'a')
+  file_content = """{obs_id};{path_to_file};{srs_id}
+""".format(obs_id=id, path_to_file=file_path, srs_id=1)
+
+  if not os.path.isfile(file_path):
+    write_to_file(simflex_input_path, filename, file_header + file_content)
   else:
-    write_to_file(table_srs_file_name, flexpart_output_header + flexpart_output_template)
+    write_to_file(simflex_input_path, filename, file_content, 'a')
 
 def parse_simflexinp():
   start_date_time = user_params['start_date_time']
@@ -189,17 +194,17 @@ smon_={start_month},
 sday_={start_day},
 shr_={start_hour},
 sminut_={start_min},
-loutstep_=3600, ! in flexpart COMMAND
+loutstep_={loutstep}, ! 3600 default
 tstart_max_=-9999.0,
 thresh_start_=1.0,
-min_duration_=3600,
+min_duration_={loutstep},
 dlon_={dlon},
 dlat_={dlat},
 outlon_={se_lon}, ! 0. default
 outlat_={se_lat},
 nlon_={nx},
 nlat_={ny},
-nhgt_={minheight},
+nhgt_={minheight}, ! 1 default
 DHgt_={maxheight}
 $end
 """.format(start_year=start_date_time.strftime('%Y'),
@@ -207,6 +212,7 @@ $end
           start_day=start_date_time.strftime('%d'),
           start_hour=start_date_time.strftime('%H'),
           start_min=start_date_time.strftime('%M'),
+          loutstep=user_params['loutstep'],
           dlon=user_params['dy_out'],
           dlat=user_params['dx_out'],
           se_lon=user_params['out_longitude'],
@@ -215,8 +221,7 @@ $end
           ny=user_params['num_y_grid'],
           minheight=user_params['minheight'],
           maxheight=user_params['maxheight'])
-  write_to_file('/simflex/simflexinp.nml', simflexinp_template)
-  logging.info('Parsing simflexinp file compleated.')
+  write_to_file(simflex_input_path, 'simflexinp.nml', simflexinp_template)
 
 def parse_releases_file(releases_params):
   SPECIES_BY_ID = {"O3": '002', "NO": '003', "NO2": '004',
@@ -265,39 +270,47 @@ def parse_releases_file(releases_params):
              minheight=user_params['minheight'],
              maxheight=user_params['maxheight'])
 
-  write_to_file('/options/RELEASES', template_header +
+  write_to_file('/options/', 'RELEASES', template_header +
                 release_header + release_body)
-  logging.info('Parsing RELEASE file compleated.')
 
 user_params = get_xml_params()
 
 # First date from user last is the last release date + 1 hour
 # It also creates AVAILABLE file and fill it
-logging.info('Started loading grib data.')
 download_grib(user_params['start_date_time'], releases_params[-1]['end_date_time'])
-logging.info('Finished loading grib data and filling AVAILABLE file.\n')
 
 parse_command_file()
 parse_outgrid_file()
 parse_simflexinp()
 
-output_file_id = 1
 end_date_time_str = (
     releases_params[-1]['end_date_time'] + timedelta(hours=1)).strftime('%Y%m%d%H%M%S')
+output_filename_prefix = 'grid_time_' + end_date_time_str
+
 for param in releases_params:
-  logging.info('Running FLEXPART ' + str(output_file_id) +
-               ' iteration in ' + str(len(releases_params)) + '.')
-  parse_releases_file(param)
-  rc = run("time FLEXPART_MPI", shell=True)
-  rc = run("""echo \"Finished {i} calculation\"""".format(i=output_file_id), shell=True)
-  # move output prognose to simflex folder and rename it according to the release comments
-  output_file_name = '/grid_time_' + end_date_time_str
-  old_output_file_path = basename + '/output' + output_file_name + '.nc'
-  new_output_file_path = simflex_dir_name + output_file_name + '_' + str(output_file_id) + '.nc'
-  os.rename(old_output_file_path,  new_output_file_path)
+  # move output prognose to simflex folder and rename it according to the release id
+  old_output_file_path = basename + '/output/' + output_filename_prefix + '.nc'
+  new_output_file_path = basename + simflex_input_path + \
+      output_filename_prefix + '_' + param['id'] + '.nc'
 
-  parse_simflex_input(output_file_id, new_output_file_path)
-  output_file_id = output_file_id + 1
-  logging.info('FLEXPART completed calculation.\n')
+  # skip calculation if output file exist
+  if not os.path.isfile(new_output_file_path):
+    parse_releases_file(param)
+    logging.info('Running FLEXPART iteration in {1}.'.format(
+        param['id'], len(releases_params)))
+    rc = run("time FLEXPART_MPI", shell=True)
+    rc = run("""echo \"Finished {i} calculation\"""".format(i=output_file_id), shell=True)
 
-# nohup /data/calculations/33_14/parse_input.py &
+    if os.path.isfile(old_output_file_path):
+      os.rename(old_output_file_path,  new_output_file_path)
+      parse_simflex_input_paths(param['id'], new_output_file_path)
+      logging.info('FLEXPART completed calculation.\n')
+    else:
+      message = "Flexpart calculation didn't complete successful for {0} release, check the outputs or input parameters.".format(param['id'])
+      logging.error(message)
+      sys.exit(message)
+  else:
+    message = 'Skip calculation, output file for {0} release exist'.format(param['id'])
+    print(message)
+    logging.info(message)
+    continue

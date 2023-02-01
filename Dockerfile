@@ -35,7 +35,7 @@ ENV PATH /flexpart_v10.4/src/:$PATH
 RUN mkdir /data/ && mkdir /data/calculations/
 
 #
-# Copy input files and run calculation
+# Copy input files and run test calculation
 #
 
 RUN cd /data/calculations/ \
@@ -43,8 +43,8 @@ RUN cd /data/calculations/ \
   && cp /flexpart_v10.4/download_grib.py . \
   && cp /flexpart_v10.4/parser.py . \
   && cp /flexpart_v10.4/pathnames . \
-  && cp -r /flexpart_v10.4//options .
-  # && python3 parser.py
+  && cp -r /flexpart_v10.4/options . \
+  && python3 parser.py
 
 #
 # Compile SIMFLEX
@@ -54,7 +54,6 @@ COPY simflex_v1/ /simflex_v1
 RUN cd /simflex_v1/src \
   && gfortran -c m_parse.for m_simflex.for \
   && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex
-
 
 #
 # Run SIMFLEX calculation
