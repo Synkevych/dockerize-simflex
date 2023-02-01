@@ -26,11 +26,17 @@ module par_mod
   integer,parameter :: sp=selected_real_kind(6)
 
   !****************************************************************
-  ! dep_prec sets the precision for deposition calculations (sp or 
+  ! dep_prec sets the precision for deposition calculations (sp or
   ! dp). sp is default, dp can be used for increased precision.
   !****************************************************************
 
   integer,parameter :: dep_prec=sp
+
+	!***********************************************************
+	! Additional output of lowest level pressure and temperature
+	! (for netcdf output)
+	!***********************************************************
+	logical,parameter :: write_p0t0 = .false.
 
   !****************************************************************
   ! Set to F to disable use of kernel for concentrations/deposition
@@ -138,9 +144,9 @@ module par_mod
 !  integer,parameter :: nxmax=181,nymax=91,nuvzmax=92,nwzmax=92,nzmax=92,nxshift=0  ! CERA 2.0 degree 92 level
 
 ! GFS
-   integer,parameter :: nxmax=721,nymax=361,nuvzmax=138,nwzmax=138,nzmax=138  ! 0.5 degree 138 level
-!  integer,parameter :: nxmax=361,nymax=181,nuvzmax=138,nwzmax=138,nzmax=138
-   integer :: nxshift=0 ! shift not fixed for the executable 
+   ! GFS 0.25
+   integer,parameter :: nxmax=1441,nymax=721,nuvzmax=138,nwzmax=138,nzmax=138
+   integer :: nxshift=0 ! shift not fixed for the executable
 
 
   !*********************************************
@@ -205,8 +211,8 @@ module par_mod
   ! Maximum number of particles, species, and similar
   !**************************************************
 
-  integer,parameter :: maxpart=7500000
-  integer,parameter :: maxspec=1
+  integer,parameter :: maxpart=10000000
+  integer,parameter :: maxspec=6
 
   real,parameter :: minmass=0.0001
 

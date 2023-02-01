@@ -25,7 +25,7 @@ user_params = {}
 releases_params = []
 
 if not os.path.exists(basename + simflex_input_path):
-  os.makedirs(simflex_input_path)
+  os.makedirs(basename + simflex_input_path)
 
 if not os.path.exists('output'):
     os.makedirs('output')
@@ -299,6 +299,7 @@ for param in releases_params:
     logging.info('Running FLEXPART iteration in {1}.'.format(
         param['id'], len(releases_params)))
     rc = run("time FLEXPART_MPI", shell=True)
+    rc = run("""echo \"Finished {i} calculation\"""".format(i=output_file_id), shell=True)
 
     if os.path.isfile(old_output_file_path):
       os.rename(old_output_file_path,  new_output_file_path)
