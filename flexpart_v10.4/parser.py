@@ -172,9 +172,9 @@ def parse_outgrid_file():
 
 def parse_simflex_input_paths(id, file_path):
   filename = 'table_srs_paths.txt'
-  file_header = """#obs_id; path_to_file; srs_id;
+  file_header = """#obs_id;path_to_file;srs_id;
 """
-  file_content = """{obs_id}; {path_to_file}; {srs_id}
+  file_content = """{obs_id};{path_to_file};{srs_id}
 """.format(obs_id=id, path_to_file=file_path, srs_id=1)
 
   if not os.path.isfile(file_path):
