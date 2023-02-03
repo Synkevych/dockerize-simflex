@@ -49,16 +49,12 @@ RUN cd /data/calculations/ \
 #
 # Compile SIMFLEX
 #
+
 COPY simflex_v1/ /simflex_v1
 
 RUN cd /simflex_v1/src \
   && gfortran -c m_parse.for m_simflex.for \
   && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex
 
-#
-# Run SIMFLEX calculation
-#
-# RUN cd flexpart_v10.4/test/simflex \
-#   && ln -s /simflex_v1/src/simflex .
-#   && ./simflex
-# ENV PATH /simflex_v1/src/:$PATH
+RUN cd /data/calculations/1/simflex/input/ \
+  && cp /simflex_v1/src/simflex .

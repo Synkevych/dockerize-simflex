@@ -2,10 +2,10 @@
       subroutine findloc1(array,Nsz,val,findloc)
       implicit none
 
-      integer,intent(in)::Nsz
-      integer, dimension(Nsz),intent(in) :: array
+      integer,intent(in) :: Nsz
+      integer,dimension(Nsz),intent(in) :: array
       integer,intent(in) :: val
-      integer,intent(out)::findloc
+      integer,intent(out) :: findloc
 
 !      integer,intent(in) :: array(*)
       integer i

@@ -18,7 +18,7 @@
     use SIMFLEX,only:lat,lon,nlon,nlat,Nobs,AllSRS,id_obs,&
      Obs_Correct,nhgt,create_grid,PassInpSettings,&
      syear,smon,sday,shr,sminut,loutstep,min_duration,tstart_max, &
-     thresh_start,dlon,dlat,DHgt,&
+     thresh_start,dlon,dlat, DHgt,outlon0,outlat0,&
      def_maxtsrcind,def_ndur_min,def_tstartmax ! - these are subroutines
    
 
@@ -114,6 +114,8 @@
      
      dlon=dlon_
      dlat=dlat_
+     outlon0=outlon_
+     outlat0=outlat_
      nlon=nlon_
      nlat=nlat_
      DHgt=DHgt_
@@ -129,7 +131,7 @@
     
     call Obs_Correct !subtract background
     
-    call def_tstartmax ! maximum start time of release 
+    call def_tstartmax ! maximum start time of release
     
     call def_maxtsrcind ! maximum time and time index of src
     
@@ -156,26 +158,21 @@
     call eval_srcloc
     
     call isoselect
-    !pause
     
     call select_subgrid
-    !pause
     
     call readsave_srs_in_selected_nodes
     
     call eval_srctimes
     
-    call eval_src_mass 
+    call eval_src_mass
     
     call save_times_mass
-    
-    !pause
 
-    
-    
+
     if(redirect_console)then
        close(6)
-    endif    
+    endif
     
     stop
 ! This section is to be deleted; previously used for testing only
@@ -211,6 +208,6 @@
          write(6,*)'Please, correct your input data'
          stop
       endif
-     enddo     
+     enddo
     
     end subroutine Check_Iso

@@ -66,7 +66,7 @@ def get_xml_params():
   }
 
 with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
-  csv_reader = csv.reader(csvfile, delimiter=' ')
+  csv_reader = csv.reader(csvfile, delimiter='\t')
   csv_header = next(csv_reader)
   for row in csv_reader:
       # name of params in row and it's order:
