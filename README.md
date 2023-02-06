@@ -33,9 +33,12 @@ FLEXPART (“FLEXible PARTicle dispersion model”) is a Lagrangian transport an
 
 1. Build the image locally in the `dockerize-simflex` folder:
 `docker build -t simflex:v1 .`
-2. Run the container using created image
-`docker run -it simflex:v1`
-3. Stop the container
+2. Create volume to save grib_data between the calculations
+`docker volume create flexpart_vm`
+3. Run the container using created image and volumes
+`docker run -d -v flexpart_vm:/data simflex:v1`
+3. Connect to the container
+`docker exec -it simflex:v1 /bin/bash`
 4. Delete container, all data will be lost
 5. Delete image
 6. Increase performance by adding more cores and memory
@@ -92,6 +95,7 @@ Open Multi-Processing ([OpenMP](http://www.openmp.org/))
 |Server|MPI|||360|10000|7m47.168s|
 |Server|MPI|||360|10000|7m46.115s|
 |Docker|Serial|Intel Core i5-8250U 1.6GHs(142)|4|3600|10000|16200s or 270m|
+|Docker|Serial|Intel Xeon CPU E5335 2.0GHs(15)|8|3600|10000|12840s or 214m|
 |Docker|MPI|||3600|10000|1h35m28s|
 |Docker|MPI|Apple M1(ARM64)|8|3600|10000|43200s or 720m|
 

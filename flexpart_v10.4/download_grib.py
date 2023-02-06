@@ -79,13 +79,15 @@ def download_grib(date_start=None, date_end=None):
       path_to_file = os.path.join(DATA_FOLDER + '/', file_name)
       # test if file exist
       if os.path.isfile(path_to_file):
-        print("File", file_name, " exist.")
+        print("File", file_name, "exist, skip loading.")
         parse_available_file(end_forecast_date, file_name)
         end_forecast_date = start_forecast_date = end_forecast_date + timedelta(hours=3)
         continue
       else:
         URL = DOMAIN + start_forecast_date.strftime('%Y%m/%Y%m%d/') + file_name
+        print('Loading file', file_name, 'from remote host.')
         urllib.request.urlretrieve(URL, path_to_file)
+        print('File uploaded successfully.')
         parse_available_file(end_forecast_date, file_name)
       end_forecast_date = start_forecast_date = end_forecast_date + \
           timedelta(hours=3)

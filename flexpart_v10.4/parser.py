@@ -177,7 +177,7 @@ def parse_simflex_input_paths(id, file_path):
   file_content = """{obs_id};{path_to_file};{srs_id}
 """.format(obs_id=id, path_to_file=file_path, srs_id=1)
 
-  if not os.path.isfile(file_path):
+  if not os.path.isfile(basename + simflex_input_path + file_path):
     write_to_file(simflex_input_path, filename, file_header + file_content)
   else:
     write_to_file(simflex_input_path, filename, file_content, 'a')
@@ -296,17 +296,18 @@ for param in releases_params:
   # skip calculation if output file exist
   if not os.path.isfile(new_output_file_path):
     parse_releases_file(param)
-    logging.info('Running FLEXPART iteration in {1}.'.format(
-        param['id'], len(releases_params)))
+    logging.info('Running FLEXPART {i} iteration in {j}.'.format(
+        i=param['id'], j=len(releases_params)))
     rc = run("time FLEXPART_MPI", shell=True)
-    rc = run("""echo \"Finished {i} calculation\"""".format(i=output_file_id), shell=True)
+    rc = run("""echo \"Finished {i} calculation\"""".format(
+        i=param['id']), shell=True)
 
     if os.path.isfile(old_output_file_path):
       os.rename(old_output_file_path,  new_output_file_path)
       parse_simflex_input_paths(param['id'], new_output_file_path)
       logging.info('FLEXPART completed calculation.\n')
     else:
-      message = "Flexpart calculation didn't complete successful for {0} release, check the outputs or input parameters.".format(param['id'])
+      message = "Flexpart calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(param['id'])
       logging.error(message)
       sys.exit(message)
   else:
