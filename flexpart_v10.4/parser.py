@@ -30,6 +30,22 @@ if not os.path.exists(basename + simflex_input_path):
 if not os.path.exists('output'):
     os.makedirs('output')
 
+def parse_messages(text, exit=False):
+  logging.info(message)
+
+  if exit:
+    sys.exit(message)
+  else:
+    print(message)
+
+def is_integer(n):
+    try:
+        float(n)
+    except ValueError:
+        return False
+    else:
+        return float(n).is_integer()
+
 def write_to_file(folder_name, file_name, contents, mode='w'):
   full_file_path = basename + folder_name + file_name
 
@@ -38,6 +54,18 @@ def write_to_file(folder_name, file_name, contents, mode='w'):
   file.close()
   logging.info('Parsing {0} file compleated.'.format(file_name))
 
+
+def parse_measurem_csv(message):
+  filename = 'measurem.csv'
+  file_header = """#Use?;Id;Station_id;Lat;Lon;Start_date;Start_time;End_date;End_time;Mass;Sigma_or_ldl;Backgr
+"""
+  file_content = """{row}
+""".format(row=message)
+
+  if not os.path.isfile(basename + simflex_input_path + filename):
+    write_to_file(simflex_input_path, filename, file_header + file_content)
+  else:
+    write_to_file(simflex_input_path, filename, file_content, 'a')
 
 def get_xml_params():
   xml_tree = ET.parse(os.path.basename(basename) + '.xml')
@@ -72,7 +100,14 @@ with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
       # name of params in row and it's order:
       # calc_id(0), use(1), m_id(2), s_id(3), station(4), country(5), s_lat(6),s_lng(7),
       # id_nuclide(8), name_nuclide(9), date_start(10), time_start(11), date_end(12), time_end(13), val(14), sigma
-      measurement_id = row[2]
+
+      if not is_integer(row[2]):
+        message = "Can\'t parse value {value} of measurement id, please cheek file {filename}.".format(
+            value=row[2], filename=os.path.basename(basename))
+        parse_messages(message)
+      else:
+        measurement_id = row[2]
+
       latitude_1 = float(row[6]) - 0.001
       latitude_2 = float(row[6]) + 0.001
       longitude_1 = float(row[7]) - 0.001
@@ -82,6 +117,16 @@ with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
       end_date_time = datetime.strptime(
           row[12] + row[13], '%Y-%m-%d%H:%M:%S')
       species_mass = "{:e}".format(float(row[14]))
+
+      if float(row[14]) <= 0:
+        species_mass = 1.000000e+01
+
+      # parse measurem.csv file here
+      message = ";".join(row[1], row[2], row[3], row[6], row[7],
+                         start_date_time.strftime('%d.%m.%Y;%H:%M:%S'),
+                         end_date_time.strftime('%d.%m.%Y;%H:%M:%S'),
+                         row[14], row[15], row[16])
+      parse_measurem_csv(message)
 
       releases_params.append({
           'id': measurement_id,
@@ -289,29 +334,29 @@ output_filename_prefix = 'grid_time_' + end_date_time_str
 
 for param in releases_params:
   # move output prognose to simflex folder and rename it according to the release id
+  id = param['id']
   old_output_file_path = basename + '/output/' + output_filename_prefix + '.nc'
   new_output_file_path = basename + simflex_input_path + \
-      output_filename_prefix + '_' + param['id'] + '.nc'
+      output_filename_prefix + '_' + id + '.nc'
 
   # skip calculation if output file exist
   if not os.path.isfile(new_output_file_path):
     parse_releases_file(param)
-    logging.info('Running FLEXPART {i} iteration in {j}.'.format(
-        i=param['id'], j=len(releases_params)))
+    logging.info('Running FLEXPART {i} iteration in {j}.'.format(i=id, j=len(releases_params)))
     rc = run("time FLEXPART_MPI", shell=True)
-    rc = run("""echo \"Finished {i} calculation\"""".format(
-        i=param['id']), shell=True)
+    rc = run("""echo \"Finished {i} calculation\" """.format(i=id), shell=True)
 
     if os.path.isfile(old_output_file_path):
       os.rename(old_output_file_path,  new_output_file_path)
-      parse_simflex_input_paths(param['id'], new_output_file_path)
+      parse_simflex_input_paths(id, new_output_file_path)
       logging.info('FLEXPART completed calculation.\n')
+      # for test purpose only, should be removed
+      os.rename(old_output_file_path,  basename + '/output_' + id)
+      os.makedirs('output')
     else:
-      message = "Flexpart calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(param['id'])
-      logging.error(message)
-      sys.exit(message)
+      message = "Flexpart calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(id)
+      parse_messages(message, True)
   else:
-    message = 'Skip calculation, output file for {0} release exist'.format(param['id'])
-    print(message)
-    logging.info(message)
+    message = 'Skip calculation, output file for {0} release exist'.format(id)
+    parse_messages(message)
     continue
