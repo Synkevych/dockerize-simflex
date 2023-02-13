@@ -38,14 +38,6 @@ def parse_messages(text, exit=False):
   else:
     print(message)
 
-def is_integer(n):
-    try:
-        float(n)
-    except ValueError:
-        return False
-    else:
-        return float(n).is_integer()
-
 def write_to_file(folder_name, file_name, contents, mode='w'):
   full_file_path = basename + folder_name + file_name
 
@@ -101,12 +93,7 @@ with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
       # calc_id(0), use(1), m_id(2), s_id(3), station(4), country(5), s_lat(6),s_lng(7),
       # id_nuclide(8), name_nuclide(9), date_start(10), time_start(11), date_end(12), time_end(13), val(14), sigma
 
-      if not is_integer(row[2]):
-        message = "Can\'t parse value {value} of measurement id, please cheek file {filename}.".format(
-            value=row[2], filename=os.path.basename(basename))
-        parse_messages(message)
-      else:
-        measurement_id = row[2]
+      measurement_id = row[2]
 
       latitude_1 = float(row[6]) - 0.001
       latitude_2 = float(row[6]) + 0.001
@@ -122,10 +109,10 @@ with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
         species_mass = 1.000000e+01
 
       # parse measurem.csv file here
-      message = ";".join(row[1], row[2], row[3], row[6], row[7],
+      message = ";".join([row[1], row[2], row[3], row[6], row[7],
                          start_date_time.strftime('%d.%m.%Y;%H:%M:%S'),
                          end_date_time.strftime('%d.%m.%Y;%H:%M:%S'),
-                         row[14], row[15], row[16])
+                         row[14], row[15], row[16]])
       parse_measurem_csv(message)
 
       releases_params.append({

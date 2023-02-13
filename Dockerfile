@@ -3,8 +3,8 @@ LABEL maintainer Synkevych Roman "synkevych.roman@gmail.com"
 
 # Install all dependencies
 RUN apt-get update && apt-get install -y \
-  language-pack-en openssh-server vim software-properties-common \
-  build-essential make gcc g++ zlib1g-dev python3 python3-dev python3-pip \
+  vim software-properties-common \
+  build-essential make gcc g++ zlib1g-dev python3 python3-pip \
   gfortran autoconf libtool automake bison cmake libnetcdff-dev \
   libeccodes0 libeccodes-data libeccodes-dev libeccodes-tools \
   curl wget time
@@ -44,7 +44,9 @@ RUN cd /data/calculations/ \
   && cp /flexpart_v10.4/parser.py . \
   && cp /flexpart_v10.4/pathnames . \
   && cp -r /flexpart_v10.4/options . \
-  && python3 parser.py
+  && cp -r /flexpart_v10.4/test/test.txt 1.txt \
+  && cp -r /flexpart_v10.4/test/test.xml 1.xml
+  # && python3 parser.py
 
 #
 # Compile SIMFLEX
@@ -56,5 +58,5 @@ RUN cd /simflex_v1/src \
   && gfortran -c m_parse.for m_simflex.for \
   && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex
 
-RUN cd /data/calculations/1/simflex/input/ \
-  && cp /simflex_v1/src/simflex .
+# RUN cd /data/calculations/1/simflex/input/ \
+  # && cp /simflex_v1/src/simflex .

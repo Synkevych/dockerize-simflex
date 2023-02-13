@@ -31,13 +31,13 @@ FLEXPART (“FLEXible PARTicle dispersion model”) is a Lagrangian transport an
 
 ## How to use
 
-1. Build the image locally in the `dockerize-simflex` folder:
+1. Build the image locally in the `dockerize-simflex` folder:  
 `docker build -t simflex:v1 .`
-2. Create volume to save grib_data between the calculations
+2. Create volume to save grib_data between the calculations:  
 `docker volume create flexpart_vm`
-3. Run the container using created image and volumes
-`docker run -d -v flexpart_vm:/data simflex:v1`
-3. Connect to the container
+3. Run the container using created image and volumes:  
+`docker run -it -d --name simflex --mount source=flexpart_vm,target=/data simflex:v1`
+3. Connect to the container:  
 `docker exec -it simflex:v1 /bin/bash`
 4. Delete container, all data will be lost
 5. Delete image
