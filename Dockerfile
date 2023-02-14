@@ -4,7 +4,7 @@ LABEL maintainer Synkevych Roman "synkevych.roman@gmail.com"
 # Install all dependencies
 RUN apt-get update && apt-get install -y \
   vim software-properties-common \
-  build-essential make gcc g++ zlib1g-dev python3 python3-pip \
+  make gcc g++ zlib1g-dev python3 python3-pip \
   gfortran autoconf libtool automake bison cmake libnetcdff-dev \
   libeccodes0 libeccodes-data libeccodes-dev libeccodes-tools \
   curl wget time
@@ -32,21 +32,17 @@ RUN cd flexpart_v10.4/src \
   && make clean
 ENV PATH /flexpart_v10.4/src/:$PATH
 
-RUN mkdir /data/ && mkdir /data/calculations/
-
 #
 # Copy input files and run test calculation
 #
+RUN mkdir /data/ && mkdir /data/calculations/
 
-RUN cd /data/calculations/ \
-  && mkdir 1 && cd 1 \
+RUN cp -r /flexpart_v10.4/test/ /data/calculations/ \
+  && cd /data/calculations/test/ \
   && cp /flexpart_v10.4/download_grib.py . \
   && cp /flexpart_v10.4/parser.py . \
   && cp /flexpart_v10.4/pathnames . \
-  && cp -r /flexpart_v10.4/options . \
-  && cp -r /flexpart_v10.4/test/test.txt 1.txt \
-  && cp -r /flexpart_v10.4/test/test.xml 1.xml
-  # && python3 parser.py
+  && cp -r /flexpart_v10.4/options .
 
 #
 # Compile SIMFLEX
@@ -58,5 +54,7 @@ RUN cd /simflex_v1/src \
   && gfortran -c m_parse.for m_simflex.for \
   && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex
 
-# RUN cd /data/calculations/1/simflex/input/ \
-  # && cp /simflex_v1/src/simflex .
+ENV PATH /simflex_v1/src/:$PATH
+
+# Start calculations
+# RUN python3 /data/calculations/test/parser.py

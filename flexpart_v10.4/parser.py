@@ -94,7 +94,6 @@ with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
       # id_nuclide(8), name_nuclide(9), date_start(10), time_start(11), date_end(12), time_end(13), val(14), sigma
 
       measurement_id = row[2]
-
       latitude_1 = float(row[6]) - 0.001
       latitude_2 = float(row[6]) + 0.001
       longitude_1 = float(row[7]) - 0.001
@@ -209,7 +208,7 @@ def parse_simflex_input_paths(id, file_path):
   file_content = """{obs_id};{path_to_file};{srs_id}
 """.format(obs_id=id, path_to_file=file_path, srs_id=1)
 
-  if not os.path.isfile(basename + simflex_input_path + file_path):
+  if not os.path.isfile(basename + simflex_input_path + filename):
     write_to_file(simflex_input_path, filename, file_header + file_content)
   else:
     write_to_file(simflex_input_path, filename, file_content, 'a')
@@ -338,7 +337,7 @@ for param in releases_params:
       parse_simflex_input_paths(id, new_output_file_path)
       logging.info('FLEXPART completed calculation.\n')
       # for test purpose only, should be removed
-      os.rename(old_output_file_path,  basename + '/output_' + id)
+      os.rename(basename + '/output/',  basename + '/output_' + id)
       os.makedirs('output')
     else:
       message = "Flexpart calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(id)
