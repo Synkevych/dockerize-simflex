@@ -27,13 +27,12 @@ RUN cd flexpart_v10.4/src \
   && cp makefile makefile_local \
   && sed -i '74 a INCPATH1 = /usr/include\nINCPATH2 = /usr/include\nLIBPATH1 = /usr/lib\n F90 = gfortran' makefile_local \
   && sed -i 's/LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper $(NCOPT)/LIBS = -leccodes_f90 -leccodes -lm -ljasper $(NCOPT)/' makefile_local \
-  # && sed -i 's/nxmax=361,nymax=181,nuvzmax=138,nwzmax=138,nzmax=138/nxmax=721,nymax=361,nuvzmax=138,nwzmax=138,nzmax=138/g' par_mod.f90 \
   && make mpi ncf=yes -f makefile_local \
   && make clean
 ENV PATH /flexpart_v10.4/src/:$PATH
 
 #
-# Copy input files and run test calculation
+# Copy input files and test calculation
 #
 RUN mkdir /data/ && mkdir /data/calculations/
 
@@ -56,5 +55,11 @@ RUN cd /simflex_v1/src \
 
 ENV PATH /simflex_v1/src/:$PATH
 
+
 # Start calculations
-# RUN python3 /data/calculations/test/parser.py
+WORKDIR /data/calculations/test
+CMD ["python3", "parser.py"]
+
+# Start simflex
+WORKDIR /data/calculations/test/simflex
+RUN simflex

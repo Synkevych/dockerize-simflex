@@ -8,8 +8,12 @@
       integer locobsid(MAXOBS)
       logical,parameter::ifdebug_out=.TRUE.
       
+      character(7),parameter::output_dirname="output/"
+      character(7),parameter::input_dirname="input/"
+
       character(1024),parameter::normcorname='normcor.dat'
       character(1024),parameter::timesmassname='times_mass.dat'
+      character(1024),parameter::gridname='grid.dat'
       
       character(1024),parameter::normcor_debug='normcor_debug.dat'
       character(1024),parameter::timesmass_debug='times_mass_debug.dat'
@@ -34,7 +38,7 @@ corner of the grid
       
 ! Sizes of all the arrays up to End_Nobs mark are Nobs:
        integer,allocatable::id_obs(:),Station_id(:) ! respective obs id-s and station id-s; size=Nobs
-       character(50),allocatable::St_name(:),St_country(:) ! station name and country (given for each obs)
+!       character(50),allocatable::St_name(:),St_country(:) ! station name and country (given for each obs)
        real,allocatable::Obs_lon(:),Obs_lat(:),
      &                   Obs_val(:),Obs_val1(:),! Obs_val is observed concentration in air (Bq/m3), Obs_val1 = observed-background
      &                   Obs_sig(:), !Obs_sig is meas. error for non-zero measurements and Lower Detection Limit for zeros
@@ -225,7 +229,10 @@ corner of the grid
         allocate(gridcells(nlon,nlat))
         allocate(cell_ilon(nlon*nlat))
         allocate(cell_jlat(nlon*nlat))
-        open(1024,FILE='grid.dat')
+
+        CALL system("mkdir -p output")
+
+        open(1024,FILE=trim(output_dirname)//gridname)
         k=0
         do j=1,nlat
            do i=1,nlon

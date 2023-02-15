@@ -19,8 +19,8 @@
      Obs_Correct,nhgt,create_grid,PassInpSettings,&
      syear,smon,sday,shr,sminut,loutstep,min_duration,tstart_max, &
      thresh_start,dlon,dlat, DHgt,outlon0,outlat0,&
-     def_maxtsrcind,def_ndur_min,def_tstartmax ! - these are subroutines
-   
+     def_maxtsrcind,def_ndur_min,def_tstartmax,& ! - these are subroutines
+     input_dirname,output_dirname
 
     implicit none
     integer,parameter:: MaxIsolines=100
@@ -45,7 +45,7 @@
     
     Isolines_=10
 
-    open(10,file='simflexinp.nml',form='formatted',IOSTAT=ierr1)
+    open(10,file=trim(input_dirname)//'simflexinp.nml',form='formatted',IOSTAT=ierr1)
     if(ierr1.ne.0)then
       write(6,*)'Error opening namelist file simflexinp.nml'
       stop
@@ -122,10 +122,10 @@
      
     ! Body of simflex
     if(redirect_console)then
-       open(6,FILE='console.dat')
+       open(6,FILE=trim(output_dirname)//'console.dat')
     endif
 
-    call read_measurements('measurem.csv',12)
+    call read_measurements(trim(input_dirname)//'measurem.csv',18)
     
     call convert_obstimes ! convert to time frame relevant to start time of simulation (in days)
     
@@ -137,7 +137,7 @@
     
     call def_ndur_min ! minimum release duration and index
 
-    call read_srs_paths('table_srs_paths.txt',19)
+    call read_srs_paths(trim(input_dirname)//'table_srs_paths.txt',25)
     
     call check_init_locobs_id
     
