@@ -50,7 +50,7 @@
 
 ! output results
        open(1110,FILE=trim(output_dirname)//normcorname)
-       if(ifdebug_out)open(1111,FILE=trim(output_dirname)//normcor_debug)
+       if(ifdebug_out)open(1111,FILE=output_dirname//normcor_debug)
        write(1111,*)'cell_id,lon,lat,normcor'
        k=0
        do j=1,nlat

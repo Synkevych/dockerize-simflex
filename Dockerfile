@@ -3,11 +3,11 @@ LABEL maintainer Synkevych Roman "synkevych.roman@gmail.com"
 
 # Install all dependencies
 RUN apt-get update && apt-get install -y \
-  vim software-properties-common \
+  openssh-server software-properties-common build-essential \
   make gcc g++ zlib1g-dev python3 python3-pip \
-  gfortran autoconf libtool automake bison cmake libnetcdff-dev \
-  libeccodes0 libeccodes-data libeccodes-dev libeccodes-tools \
-  curl wget time
+  gfortran autoconf libtool automake bison cmake \
+  libeccodes0 libeccodes-dev libeccodes-tools \
+  libnetcdff-dev time
 
 RUN add-apt-repository 'deb http://security.ubuntu.com/ubuntu xenial-security main'\
   && apt-get update \
@@ -58,8 +58,8 @@ ENV PATH /simflex_v1/src/:$PATH
 
 # Start calculations
 WORKDIR /data/calculations/test
-CMD ["python3", "parser.py"]
 
-# Start simflex
-WORKDIR /data/calculations/test/simflex
-RUN simflex
+WORKDIR /data/calculations/test
+RUN python3 parser.py \
+  && cd simflex \
+  && simflex
