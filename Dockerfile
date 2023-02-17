@@ -58,3 +58,5 @@ ENV PATH /simflex_v1/src/:$PATH
 # Start calculations
 WORKDIR /data/calculations/test
 CMD ["python3", "/data/calculations/test/parser.py"]
+
+VOLUME [ "/data" ]

@@ -40,7 +40,7 @@ def parse_messages(message, exit=False):
     logging.error(message)
   else:
     logging.info(message)
-    rc = run("""echo \"{message}}\"""".format(message=message), shell=True)
+    rc = run("""echo \"{message}\" """.format(message=message), shell=True)
 
 def write_to_file(folder_name, file_name, contents, mode='w'):
   full_file_path = basename + folder_name + file_name
@@ -332,7 +332,8 @@ for param in releases_params:
   # skip calculation if output file exist
   if not os.path.isfile(new_output_file_path):
     parse_releases_file(param)
-    message = 'Running FLEXPART {i} iteration in {j}.'.format(i=id, j=len(releases_params))
+    message = 'Running {i} FLEXPART iteration in {j}.'.format(
+        i=id, j=len(releases_params))
     parse_messages(message)
     rc = run("time FLEXPART_MPI", shell=True)
 

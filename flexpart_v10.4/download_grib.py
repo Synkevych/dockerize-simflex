@@ -3,6 +3,9 @@ import logging, os, urllib.request
 
 # 2 month equal to 44 Gb / calc speed and time needed to downloads this data
 
+logging.basicConfig(filename="parsing.log", level=logging.INFO,
+                    format="%(asctime)s %(message)s")
+
 HHMMSS = ['030000', '060000', '090000', '120000',
           '150000', '180000', '210000', '000000']
 FILE_HOURS = ['0000', '0000', '0600', '0600', '1200', '1200', '1800', '1800']
