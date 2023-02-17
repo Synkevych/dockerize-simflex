@@ -8,8 +8,8 @@
       integer locobsid(MAXOBS)
       logical,parameter::ifdebug_out=.TRUE.
       
-      character(7),parameter::output_dirname="output/"
-      character(7),parameter::input_dirname="input/"
+      character(15),parameter::output_dirname="simflex_output/"
+      character(14),parameter::input_dirname="simflex_input/"
 
       character(1024),parameter::normcorname='normcor.dat'
       character(1024),parameter::timesmassname='times_mass.dat'
@@ -94,11 +94,7 @@ corner of the grid
 
          real,allocatable::Jmax_sol(:),start_time(:),duration(:),Mass(:) ! size - Nselect maximum corr. coeff., start time  from the start of release and duration in hours, Mass of release in Bq (if input con where in Bq/m3)
          integer Isolut ! index of selected subgrid where maximum cor. coef with respect to time is reached
- 
-        
-        
-        
-        
+
 !       real,allocatable::Arr(:,:,:,:) !temporary
 
         contains

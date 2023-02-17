@@ -13,7 +13,7 @@ logging.basicConfig(filename="parsing.log", level=logging.INFO,
                     format="%(asctime)s %(message)s")
 
 basename = os.getcwd()
-simflex_input_path = '/simflex/input/'
+simflex_input_path = '/simflex_input/'
 template_header = """***************************************************************************************************************
 *                                                                                                             *
 *   Input file for the Lagrangian particle dispersion model FLEXPART                                           *
@@ -23,6 +23,7 @@ template_header = """***********************************************************
 """
 user_params = {}
 releases_params = []
+start_time = datetime.now()
 
 if not os.path.exists(basename + simflex_input_path):
   os.makedirs(basename + simflex_input_path)
@@ -328,9 +329,9 @@ for param in releases_params:
   # skip calculation if output file exist
   if not os.path.isfile(new_output_file_path):
     parse_releases_file(param)
-    logging.info('Running FLEXPART {i} iteration in {j}.'.format(i=id, j=len(releases_params)))
+    message = 'Running FLEXPART {i} iteration in {j}.'.format(i=id, j=len(releases_params))
+    parse_messages(message)
     rc = run("time FLEXPART_MPI", shell=True)
-    rc = run("""echo \"Finished {i} calculation\" """.format(i=id), shell=True)
 
     if os.path.isfile(old_output_file_path):
       os.rename(old_output_file_path,  new_output_file_path)
@@ -346,3 +347,17 @@ for param in releases_params:
     message = 'Skip calculation, output file for {0} release exist'.format(id)
     parse_messages(message)
     continue
+
+message = 'FLEXPART finished all calculations, it took '+str(datetime.now()-start_time)+'.\n'
+parse_messages(message)
+
+start_simflex_time = datetime.now()
+rc = run("simflex", shell=True)
+
+message = 'SIMFLEX finished calculation, it took '+str(datetime.now()-start_simflex_time)+'.\n'
+parse_messages(message)
+
+
+message = 'All calculation took ' + \
+    str(datetime.now()-start_time)+'.\n'
+parse_messages(message)

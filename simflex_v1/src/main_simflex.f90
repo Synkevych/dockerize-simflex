@@ -125,7 +125,7 @@
        open(6,FILE=trim(output_dirname)//'console.dat')
     endif
 
-    call read_measurements(trim(input_dirname)//'measurem.csv',18)
+    call read_measurements(trim(input_dirname)//'measurem.csv',27)
     
     call convert_obstimes ! convert to time frame relevant to start time of simulation (in days)
     
@@ -137,7 +137,7 @@
     
     call def_ndur_min ! minimum release duration and index
 
-    call read_srs_paths(trim(input_dirname)//'table_srs_paths.txt',25)
+    call read_srs_paths(trim(input_dirname)//'table_srs_paths.txt',34)
     
     call check_init_locobs_id
     

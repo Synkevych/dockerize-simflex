@@ -55,11 +55,6 @@ RUN cd /simflex_v1/src \
 
 ENV PATH /simflex_v1/src/:$PATH
 
-
 # Start calculations
 WORKDIR /data/calculations/test
-
-WORKDIR /data/calculations/test
-RUN python3 parser.py \
-  && cd simflex \
-  && simflex
+CMD ["python3", "/data/calculations/test/parser.py"]

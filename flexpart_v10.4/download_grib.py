@@ -1,9 +1,6 @@
 from datetime import datetime, timedelta, date
 import logging, os, urllib.request
 
-logging.basicConfig(filename="parsing.log", level=logging.INFO,
-                    format="%(asctime)s %(message)s")
-
 # 2 month equal to 44 Gb / calc speed and time needed to downloads this data
 
 HHMMSS = ['030000', '060000', '090000', '120000',
@@ -15,6 +12,7 @@ FILE_PREFIX = "gfs_4_"
 DOMAIN = NCEI_URL + "forecast/grid-004-0.5-degree/"
 basename = os.getcwd()
 DATA_FOLDER = '/data/grib_data/'
+start_loading_time = datetime.now()
 available_template_header = """XXXXXX EMPTY LINES XXXXXXXXX
 XXXXXX EMPTY LINES XXXXXXXX
 YYYYMMDD HHMMSS      name of the file(up to 80 characters)
@@ -93,4 +91,5 @@ def download_grib(date_start=None, date_end=None):
           timedelta(hours=3)
 
 
-logging.info('Finished loading grib data and filling AVAILABLE file.\n')
+logging.info('Finished loading grib data and filling AVAILABLE file, it took ' +
+             str(datetime.now()-start_loading_time)+'.\n')
