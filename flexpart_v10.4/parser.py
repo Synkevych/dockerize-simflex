@@ -31,13 +31,16 @@ if not os.path.exists(basename + simflex_input_path):
 if not os.path.exists('output'):
     os.makedirs('output')
 
-def parse_messages(text, exit=False):
-  logging.info(message)
+def parse_messages(message, exit=False):
+  message = message + "\n"
+
 
   if exit:
     sys.exit(message)
+    logging.error(message)
   else:
-    print(message)
+    logging.info(message)
+    rc = run("""echo \"{message}}\"""".format(message=message), shell=True)
 
 def write_to_file(folder_name, file_name, contents, mode='w'):
   full_file_path = basename + folder_name + file_name
@@ -336,28 +339,29 @@ for param in releases_params:
     if os.path.isfile(old_output_file_path):
       os.rename(old_output_file_path,  new_output_file_path)
       parse_simflex_input_paths(id, new_output_file_path)
-      logging.info('FLEXPART completed calculation.\n')
+      parse_messages("FLEXPART completed {i} calculation.".format(i=id))
       # for test purpose only, should be removed
       os.rename(basename + '/output/',  basename + '/output_' + id)
       os.makedirs('output')
     else:
-      message = "Flexpart calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(id)
+      message = "Flexpart calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(
+          id)
       parse_messages(message, True)
   else:
-    message = 'Skip calculation, output file for {0} release exist'.format(id)
+    message = 'Skip calculation, output file for {0} release exist.'.format(id)
     parse_messages(message)
     continue
 
-message = 'FLEXPART finished all calculations, it took '+str(datetime.now()-start_time)+'.\n'
+message = 'FLEXPART finished all calculations, it took '+str(datetime.now()-start_time)+'.'
 parse_messages(message)
 
 start_simflex_time = datetime.now()
+parse_messages("Starting simflex calculation.")
 rc = run("simflex", shell=True)
 
-message = 'SIMFLEX finished calculation, it took '+str(datetime.now()-start_simflex_time)+'.\n'
+message = 'SIMFLEX finished calculation, it took '+str(datetime.now()-start_simflex_time)+'.'
 parse_messages(message)
 
-
 message = 'All calculation took ' + \
-    str(datetime.now()-start_time)+'.\n'
+    str(datetime.now()-start_time)+'.'
 parse_messages(message)

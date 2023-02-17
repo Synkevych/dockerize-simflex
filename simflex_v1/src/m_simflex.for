@@ -226,7 +226,7 @@ corner of the grid
         allocate(cell_ilon(nlon*nlat))
         allocate(cell_jlat(nlon*nlat))
 
-        CALL system("mkdir -p output")
+        CALL system("mkdir -p "//output_dirname)
 
         open(1024,FILE=trim(output_dirname)//gridname)
         k=0
