@@ -23,7 +23,7 @@ template_header = """***********************************************************
 """
 user_params = {}
 releases_params = []
-start_time = datetime.now()
+measurem_csv_params = "#Use?;Id;Station_id;Lat;Lon;Start_date;Start_time;End_date;End_time;Mass;Sigma_or_ldl;Backgr\n"
 
 if not os.path.exists(basename + simflex_input_path):
   os.makedirs(basename + simflex_input_path)
@@ -34,10 +34,9 @@ if not os.path.exists('output'):
 def parse_messages(message, exit=False):
   message = message + "\n"
 
-
   if exit:
-    sys.exit(message)
     logging.error(message)
+    sys.exit(message)
   else:
     logging.info(message)
     rc = run("""echo \"{message}\" """.format(message=message), shell=True)
@@ -49,19 +48,6 @@ def write_to_file(folder_name, file_name, contents, mode='w'):
   file.write(contents)
   file.close()
   logging.info('Parsing {0} file compleated.'.format(file_name))
-
-
-def parse_measurem_csv(message):
-  filename = 'measurem.csv'
-  file_header = """#Use?;Id;Station_id;Lat;Lon;Start_date;Start_time;End_date;End_time;Mass;Sigma_or_ldl;Backgr
-"""
-  file_content = """{row}
-""".format(row=message)
-
-  if not os.path.isfile(basename + simflex_input_path + filename):
-    write_to_file(simflex_input_path, filename, file_header + file_content)
-  else:
-    write_to_file(simflex_input_path, filename, file_content, 'a')
 
 def get_xml_params():
   xml_tree = ET.parse(os.path.basename(basename) + '.xml')
@@ -111,12 +97,10 @@ with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
       if float(row[14]) <= 0:
         species_mass = 1.000000e+01
 
-      # parse measurem.csv file here
-      message = ";".join([row[1], row[2], row[3], row[6], row[7],
+      measurem_csv_params += ";".join([row[1], row[2], row[3], row[6], row[7],
                          start_date_time.strftime('%d.%m.%Y;%H:%M:%S'),
                          end_date_time.strftime('%d.%m.%Y;%H:%M:%S'),
-                         row[14], row[15], row[16]])
-      parse_measurem_csv(message)
+                         row[14], row[15], row[16]]) + "\n"
 
       releases_params.append({
           'id': measurement_id,
@@ -217,7 +201,7 @@ def parse_simflex_input_paths(id, file_path):
   else:
     write_to_file(simflex_input_path, filename, file_content, 'a')
 
-def parse_simflexinp():
+def parse_simflex_inputs():
   start_date_time = user_params['start_date_time']
   simflexinp_template = """$simflexinp
 redirect_console=.false.,
@@ -257,6 +241,7 @@ $end
           minheight=user_params['minheight'],
           maxheight=user_params['maxheight'])
   write_to_file(simflex_input_path, 'simflexinp.nml', simflexinp_template)
+  write_to_file(simflex_input_path, 'measurem.csv', measurem_csv_params)
 
 def parse_releases_file(releases_params):
   SPECIES_BY_ID = {"O3": '002', "NO": '003', "NO2": '004',
@@ -311,16 +296,16 @@ def parse_releases_file(releases_params):
 user_params = get_xml_params()
 
 # First date from user last is the last release date + 1 hour
-# It also creates AVAILABLE file and fill it
 download_grib(user_params['start_date_time'], releases_params[-1]['end_date_time'])
 
 parse_command_file()
 parse_outgrid_file()
-parse_simflexinp()
+parse_simflex_inputs()
 
 end_date_time_str = (
     releases_params[-1]['end_date_time'] + timedelta(hours=1)).strftime('%Y%m%d%H%M%S')
 output_filename_prefix = 'grid_time_' + end_date_time_str
+start_calc_time = datetime.now()
 
 for param in releases_params:
   # move output prognose to simflex folder and rename it according to the release id
@@ -345,24 +330,20 @@ for param in releases_params:
       os.rename(basename + '/output/',  basename + '/output_' + id)
       os.makedirs('output')
     else:
-      message = "Flexpart calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(
+      message = "Calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(
           id)
       parse_messages(message, True)
   else:
-    message = 'Skip calculation, output file for {0} release exist.'.format(id)
-    parse_messages(message)
+    parse_messages('Skip calculation, output file for {0} release exist.'.format(id))
     continue
 
-message = 'FLEXPART finished all calculations, it took '+str(datetime.now()-start_time)+'.'
-parse_messages(message)
+messages = 'FLEXPART finished all calculations, it took '+str(datetime.now()-start_calc_time)+".\n"
 
 start_simflex_time = datetime.now()
-parse_messages("Starting simflex calculation.")
+messages +=  "Starting simflex calculation.\n"
 rc = run("simflex", shell=True)
 
-message = 'SIMFLEX finished calculation, it took '+str(datetime.now()-start_simflex_time)+'.'
-parse_messages(message)
-
-message = 'All calculation took ' + \
-    str(datetime.now()-start_time)+'.'
-parse_messages(message)
+messages += 'SIMFLEX finished calculation, it took '+str(datetime.now()-start_simflex_time)+".\n"
+messages += 'All calculation took ' + \
+    str(datetime.now()-start_calc_time)
+parse_messages(messages)
