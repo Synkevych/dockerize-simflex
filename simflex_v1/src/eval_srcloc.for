@@ -5,7 +5,7 @@
       use SIMFLEX,only:Nobs,Obs_val1,AllSRS,MaxCor0,Imax0,
      &Jmax0,normcor0,nlon,nlat,MAXOBS,gridcells,lon,lat,
      &Niso,Prob_iso,Isolines,normcorname,ifdebug_out,
-     &normcor_debug
+     &normcor_debug,output_dirname
      
       implicit none
       integer i,j,k
@@ -49,8 +49,8 @@
 
 
 ! output results
-       open(1110,FILE=normcorname)
-       if(ifdebug_out)open(1111,FILE=normcor_debug)
+       open(1110,FILE=trim(output_dirname)//normcorname)
+       if(ifdebug_out)open(1111,FILE=output_dirname//normcor_debug)
        write(1111,*)'cell_id,lon,lat,normcor'
        k=0
        do j=1,nlat
@@ -65,7 +65,7 @@
        if(ifdebug_out)close(1111)
        close(1110)
       
-       open(1111,FILE='Table.txt')
+       open(1111,FILE=trim(output_dirname)//'Table.txt')
        write(1111,*)'% of_maxcor, Probability; MaxCor=',MaxCor0
        do k=1,Niso
         write(1111,*)Isolines(k),Prob_iso(k)

@@ -3,11 +3,11 @@ LABEL maintainer Synkevych Roman "synkevych.roman@gmail.com"
 
 # Install all dependencies
 RUN apt-get update && apt-get install -y \
-  vim software-properties-common \
+  openssh-server software-properties-common build-essential \
   make gcc g++ zlib1g-dev python3 python3-pip \
-  gfortran autoconf libtool automake bison cmake libnetcdff-dev \
-  libeccodes0 libeccodes-data libeccodes-dev libeccodes-tools \
-  curl wget time
+  gfortran autoconf libtool automake bison cmake \
+  libeccodes0 libeccodes-dev libeccodes-tools \
+  libnetcdff-dev time vim
 
 RUN add-apt-repository 'deb http://security.ubuntu.com/ubuntu xenial-security main'\
   && apt-get update \
@@ -27,13 +27,14 @@ RUN cd flexpart_v10.4/src \
   && cp makefile makefile_local \
   && sed -i '74 a INCPATH1 = /usr/include\nINCPATH2 = /usr/include\nLIBPATH1 = /usr/lib\n F90 = gfortran' makefile_local \
   && sed -i 's/LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper $(NCOPT)/LIBS = -leccodes_f90 -leccodes -lm -ljasper $(NCOPT)/' makefile_local \
-  # && sed -i 's/nxmax=361,nymax=181,nuvzmax=138,nwzmax=138,nzmax=138/nxmax=721,nymax=361,nuvzmax=138,nwzmax=138,nzmax=138/g' par_mod.f90 \
   && make mpi ncf=yes -f makefile_local \
-  && make clean
+  && make clean \
+  && if ./FLEXPART_MPI | grep -q 'Welcome to FLEXPART'; then echo "Test FLEXPART binary successfuly."; else echo "Error on testing FLEXPART binary." && false; fi
+
 ENV PATH /flexpart_v10.4/src/:$PATH
 
 #
-# Copy input files and run test calculation
+# Copy input files and test calculation
 #
 RUN mkdir /data/ && mkdir /data/calculations/
 
@@ -52,9 +53,16 @@ COPY simflex_v1/ /simflex_v1
 
 RUN cd /simflex_v1/src \
   && gfortran -c m_parse.for m_simflex.for \
-  && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex
+  && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex \
+  && if ./simflex | grep -q 'Starting SIMFLEX'; then echo "Test simflex binary successfuly."; else echo "Error on testing simflex binary." && false; fi
 
 ENV PATH /simflex_v1/src/:$PATH
 
 # Start calculations
-# RUN python3 /data/calculations/test/parser.py
+
+# COPY grib_data/ /data/grib_data
+
+WORKDIR /data/calculations/test
+CMD ["python3", "/data/calculations/test/parser.py"]
+
+VOLUME [ "/data" ]
