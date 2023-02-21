@@ -202,7 +202,7 @@ module par_mod
   !integer maxxgrid,maxygrid,maxzgrid,maxxgridn,maxygridn
   !integer,parameter :: maxxgrid=361,maxygrid=181,maxxgridn=0,maxygridn=0)
 
-  integer,parameter :: maxreceptor=20
+  integer,parameter :: maxreceptor=200
 
   ! maxreceptor             maximum number of receptor points
 
@@ -211,7 +211,7 @@ module par_mod
   ! Maximum number of particles, species, and similar
   !**************************************************
 
-  integer,parameter :: maxpart=10000000
+  integer,parameter :: maxpart=7500000
   integer,parameter :: maxspec=6
 
   real,parameter :: minmass=0.0001
