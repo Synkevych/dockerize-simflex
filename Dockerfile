@@ -27,9 +27,9 @@ RUN cd flexpart_v10.4/src \
   && cp makefile makefile_local \
   && sed -i '74 a INCPATH1 = /usr/include\nINCPATH2 = /usr/include\nLIBPATH1 = /usr/lib\n F90 = gfortran' makefile_local \
   && sed -i 's/LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper $(NCOPT)/LIBS = -leccodes_f90 -leccodes -lm -ljasper $(NCOPT)/' makefile_local \
-  && make serial ncf=yes -f makefile_local \
+  && make mpi ncf=yes -f makefile_local \
   && make clean \
-  && if ./FLEXPART_MPI | grep -q 'Welcome to FLEXPART'; then echo "Test FLEXPART binary successfuly."; else echo "Error on testing FLEXPART binary." && exit 0; fi
+  && if ./FLEXPART_MPI | grep -q 'Welcome to FLEXPART'; then echo "Test FLEXPART binary successfuly."; else echo "Error on testing FLEXPART binary." && false; fi
 
 ENV PATH /flexpart_v10.4/src/:$PATH
 
@@ -54,7 +54,7 @@ COPY simflex_v1/ /simflex_v1
 RUN cd /simflex_v1/src \
   && gfortran -c m_parse.for m_simflex.for \
   && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex \
-  && if ./simflex | grep -q 'Starting SIMFLEX'; then echo "Test simflex binary successfuly."; else echo "Error on testing simflex binary." && exit 0; fi
+  && if ./simflex | grep -q 'Starting SIMFLEX'; then echo "Test simflex binary successfuly."; else echo "Error on testing simflex binary." && false; fi
 
 ENV PATH /simflex_v1/src/:$PATH
 
