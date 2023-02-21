@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
   make gcc g++ zlib1g-dev python3 python3-pip \
   gfortran autoconf libtool automake bison cmake \
   libeccodes0 libeccodes-dev libeccodes-tools \
-  libnetcdff-dev time
+  libnetcdff-dev time vim
 
 RUN add-apt-repository 'deb http://security.ubuntu.com/ubuntu xenial-security main'\
   && apt-get update \
@@ -27,8 +27,10 @@ RUN cd flexpart_v10.4/src \
   && cp makefile makefile_local \
   && sed -i '74 a INCPATH1 = /usr/include\nINCPATH2 = /usr/include\nLIBPATH1 = /usr/lib\n F90 = gfortran' makefile_local \
   && sed -i 's/LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper $(NCOPT)/LIBS = -leccodes_f90 -leccodes -lm -ljasper $(NCOPT)/' makefile_local \
-  && make mpi ncf=yes -f makefile_local \
-  && make clean
+  && make serial ncf=yes -f makefile_local \
+  && make clean \
+  && if ./FLEXPART_MPI | grep -q 'Welcome to FLEXPART'; then echo "Test FLEXPART binary successfuly."; else echo "Error on testing FLEXPART binary." && exit 0; fi
+
 ENV PATH /flexpart_v10.4/src/:$PATH
 
 #
@@ -51,11 +53,15 @@ COPY simflex_v1/ /simflex_v1
 
 RUN cd /simflex_v1/src \
   && gfortran -c m_parse.for m_simflex.for \
-  && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex
+  && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex \
+  && if ./simflex | grep -q 'Starting SIMFLEX'; then echo "Test simflex binary successfuly."; else echo "Error on testing simflex binary." && exit 0; fi
 
 ENV PATH /simflex_v1/src/:$PATH
 
 # Start calculations
+
+# COPY grib_data/ /data/grib_data
+
 WORKDIR /data/calculations/test
 CMD ["python3", "/data/calculations/test/parser.py"]
 

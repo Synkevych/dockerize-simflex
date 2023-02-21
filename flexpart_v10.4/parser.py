@@ -317,7 +317,7 @@ for param in releases_params:
   # skip calculation if output file exist
   if not os.path.isfile(new_output_file_path):
     parse_releases_file(param)
-    message = 'Running {i} FLEXPART iteration in {j}.'.format(
+    message = 'FLEXPART running {i} of {j} releases.'.format(
         i=id, j=len(releases_params))
     parse_messages(message)
     rc = run("time FLEXPART_MPI", shell=True)
@@ -325,7 +325,8 @@ for param in releases_params:
     if os.path.isfile(old_output_file_path):
       os.rename(old_output_file_path,  new_output_file_path)
       parse_simflex_input_paths(id, new_output_file_path)
-      parse_messages("FLEXPART completed {i} calculation.".format(i=id))
+      parse_messages(
+          "FLEXPART completed the calculation of {i} release.".format(i=id))
       # for test purpose only, should be removed
       os.rename(basename + '/output/',  basename + '/output_' + id)
       os.makedirs('output')
