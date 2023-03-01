@@ -40,7 +40,7 @@ RUN mkdir /data/ && mkdir /data/calculations/
 
 RUN cp -r /flexpart_v10.4/test/ /data/calculations/ \
   && cd /data/calculations/test/ \
-  && cp /flexpart_v10.4/download_grib.py . \
+  && cp /flexpart_v10.4/download_grid.py . \
   && cp /flexpart_v10.4/parser.py . \
   && cp /flexpart_v10.4/pathnames . \
   && cp -r /flexpart_v10.4/options .

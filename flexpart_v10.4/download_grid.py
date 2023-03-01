@@ -23,15 +23,13 @@ XXXXXX EMPTY LINES XXXXXXXX
 YYYYMMDD HHMMSS      name of the file(up to 80 characters)
 """
 
-def parse_messages(message, exit=False):
-  message = message + "\n"
-
+def parse_messages(msg, exit=False):
   if exit:
-    logging.error(message)
-    sys.exit(message)
+    logging.error(msg)
+    sys.exit(msg)
   else:
-    logging.info(message)
-    rc = run("""echo \"{message}\" """.format(message=message), shell=True)
+    print(msg)
+    logging.info(msg)
 
 
 def write_to_file(file_name, contents, mode='w'):
@@ -56,9 +54,9 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
   parse_messages('Started loading grid data.')
 
   if type(date_start) is not datetime:
-    sys.exit("Start Date is incorrect")
+    parse_messages("Start Date is incorrect",True)
   elif type(date_end) is not datetime:
-    sys.exit("End Date is incorrect")
+   parse_messages("End Date is incorrect",True)
   else:
     # dates should ends with hours that divides to 3
     start_date = date_start - timedelta(hours = date_start.hour % 3)
@@ -76,11 +74,6 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
         end_date - start_date).days, (end_date - start_date).seconds
     hours = (days * 24 + seconds / 3600) // 8
 
-    # print('amount of datasets: ',  hours)
-    if hours <= 0:
-      sys.exit('Error, invalid START or END date, between the date is no short interval')
-      return
-
     create_folder(DATA_FOLDER)
     write_to_file('AVAILABLE', available_template_header)
 
@@ -94,7 +87,8 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
 
     if start_date < datetime(2005, 1, 2) or start_date > (datetime.now() - timedelta(days=2)):
       parse_messages("Error can\'t find grid data for provided datetime.", True)
-    elif start_date < datetime.now() - timedelta(days=1013):  # 1011
+      return
+    elif start_date < datetime.now() - timedelta(days=1013):
       # historical available from 2019/08/01 - 2020/05/01-15
       if grid_type == "forecast":
       # from 2019/05/16-31 - 2020/05/01-15
@@ -130,28 +124,32 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
       try:
         response = urlopen(URL)
       except Exception as ex:
-        parse_messages('Error, while loading file ' + file_name + ' ' + ex)
+        parse_messages('Error, while loading file ' + file_name + ' ' + str(ex))
       else:
         if os.path.isfile(path_to_file) and os.stat(path_to_file).st_size == response.length:
-          parse_messages("File "+file_name+str(int(os.stat(path_to_file).st_size/1024/1024))+" M exist, skip loading.")
+          parse_messages("File "+file_name+" " +str(int(os.stat(path_to_file).st_size/1024/1024))+"M exist, skip loading.\n")
           parse_available_file(end_forecast_date, file_name)
           end_forecast_date = start_forecast_date = end_forecast_date + \
               timedelta(hours=3)
           continue
         else:
-          print('Loading file', file_name, 'with size', int(
-              response.length/1024/1024), 'M from remote host.')
-          if response.status == 200 and response.length > 10:
+          if response.status == 200 and response.length > 1024:
+              parse_messages('Loading file ' + file_name + ' with size ' + str(int(
+                  response.length/1024/1024))+'M from remote host.')
               outfile = open(path_to_file, 'wb')
               try:
                   shutil.copyfileobj(response, outfile)
+                  parse_available_file(end_forecast_date, file_name)
+                  parse_messages('File ' + file_name + ' uploaded successfully.\n')
               finally:
                   outfile.close()
-        parse_available_file(end_forecast_date, file_name)
+          else:
+             parse_messages('Error, while loading file ' + file_name + ' file is not correct.\n')
       finally:
         if response is not None:
             response.close()
       end_forecast_date = start_forecast_date = end_forecast_date + \
           timedelta(hours=3)
+
   parse_messages('Finished loading grid data and filling AVAILABLE file, it took ' +
              str(datetime.now()-start_loading_time)+'.\n')
