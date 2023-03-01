@@ -9,19 +9,30 @@ import shutil
 
 # 2 month equal to 44 Gb / calc speed and time needed to downloads this data
 
-# logging.basicConfig(filename="parsing.log", level=logging.INFO,
-#                     format="%(asctime)s %(message)s")
+logging.basicConfig(filename="parsing.log", level=logging.INFO,
+                    format="%(asctime)s %(message)s")
 
 HHMMSS = ['030000', '060000', '090000', '120000',
           '150000', '180000', '210000', '000000']
 FILE_HOURS = ['0000', '0000', '0600', '0600', '1200', '1200', '1800', '1800']
 FILE_SUFFIX = ['003', '006']
-DATA_FOLDER = '/data/grib_data/'
+DATA_FOLDER = '/data/grid_data/'
 start_loading_time = datetime.now()
 available_template_header = """XXXXXX EMPTY LINES XXXXXXXXX
 XXXXXX EMPTY LINES XXXXXXXX
 YYYYMMDD HHMMSS      name of the file(up to 80 characters)
 """
+
+def parse_messages(message, exit=False):
+  message = message + "\n"
+
+  if exit:
+    logging.error(message)
+    sys.exit(message)
+  else:
+    logging.info(message)
+    rc = run("""echo \"{message}\" """.format(message=message), shell=True)
+
 
 def write_to_file(file_name, contents, mode='w'):
   basename = os.getcwd()
@@ -34,7 +45,6 @@ def create_folder(directory=None):
      os.makedirs(directory)
 
 def parse_available_file(date=None, file_name=None):
-  # if date is not None and file_name is not None:
   available_template_body = """{yyyymmdd} {hhmmss}      {file_name}      ON DISC
 """.format(yyyymmdd=date.strftime('%Y%m%d'),
           hhmmss=date.strftime('%H%M%S'),
@@ -42,8 +52,8 @@ def parse_available_file(date=None, file_name=None):
   write_to_file('AVAILABLE', available_template_body, 'a')
 
 
-def download_grib(date_start=None, date_end=None, angle='1.0'):  # degree = '0.5' or 1
-  logging.info('Started loading grib data.')
+def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="analysis"):  # '0.5' or 1.0
+  parse_messages('Started loading grid data.')
 
   if type(date_start) is not datetime:
     sys.exit("Start Date is incorrect")
@@ -76,34 +86,29 @@ def download_grib(date_start=None, date_end=None, angle='1.0'):  # degree = '0.5
 
     end_forecast_date = start_forecast_date = start_date
 
-    if angle == '0.5':
-      FILE_PREFIX = "gfs_4_"
-      GRID = "grid-004-0.5-degree/"
-    elif angle == '1.0':
-      FILE_PREFIX = "gfs_3_"
-      GRID = "grid-003-1.0-degree/"
-
     NCEI_URL = "https://www.ncei.noaa.gov/data/global-forecast-system/access/"
-    FILE_SUFIX = ".grb2"
+    FILE_TYPE = ".grb2"
+    PREFIX_BY_DEGREE = {'0.5': '4', '1.0': '3'}
+    GRID = "grid-00" + \
+        PREFIX_BY_DEGREE[grid_degree] + '-' + grid_degree + "-degree/"
 
-    if start_date < datetime(2017, 4, 5):
-      FILE_SUFIX = ".grb"
-
-    # build the link
     if start_date < datetime(2005, 1, 2) or start_date > (datetime.now() - timedelta(days=2)):
-      sys.exit("Error can\'t find grib data for provided datetime.")
-    elif start_date < datetime.now() - timedelta(days=1013): #1011
-      # available from grib file from 2005/01/01 grib2 file from 2017/04/06 to 2020/05/15
-      # FILE_PREFIX = "gfsanl_3_"
-      TYPE_1 = "historical/"
-      TYPE_2 = "forecast/" # or "analysis/" add GRID if you use forecast
-      DOMAIN = NCEI_URL + TYPE_1 + TYPE_2 + GRID
-    else:
-      # available from 2020/05/15 to today -2 days
-      TYPE_1 = "forecast/" # or "analysis/"
-      DOMAIN = NCEI_URL + GRID + TYPE_1
+      parse_messages("Error can\'t find grid data for provided datetime.", True)
+    elif start_date < datetime.now() - timedelta(days=1013):  # 1011
+      # historical available from 2019/08/01 - 2020/05/01-15
+      if grid_type == "forecast":
+      # from 2019/05/16-31 - 2020/05/01-15
+        DOMAIN = NCEI_URL + "historical/forecast/" + GRID
+      elif grid_type == "analysis":
+        # from 2004/03/01 - 2020/05/01-15
+        FILE_PREFIX = "gfsanl_" + PREFIX_BY_DEGREE[grid_degree] + "_"
+        DOMAIN = NCEI_URL + "historical/analysis/"
 
-    # test if file exist
+      if start_date < datetime(2017, 4, 5):
+        FILE_TYPE = ".grb"
+    else:
+      FILE_PREFIX = "gfs_" + PREFIX_BY_DEGREE[grid_degree] + "_"
+      DOMAIN = NCEI_URL + GRID + grid_type + '/'
 
     while(end_forecast_date < end_date):
       forecast_suffix = ''
@@ -116,31 +121,37 @@ def download_grib(date_start=None, date_end=None, angle='1.0'):  # degree = '0.5
         forecast_suffix = FILE_SUFFIX[0]
       file_name = FILE_PREFIX + \
           start_forecast_date.strftime(
-              '%Y%m%d_%H%M_') + forecast_suffix + FILE_SUFIX
-      path_to_file = os.path.join(DATA_FOLDER + '/', file_name)
-      # test if file exist
-      if os.path.isfile(path_to_file):
-        print("File", file_name, "exist, skip loading.")
-        parse_available_file(end_forecast_date, file_name)
-        end_forecast_date = start_forecast_date = end_forecast_date + timedelta(hours=3)
-        continue
-      else:
-        URL = DOMAIN + start_forecast_date.strftime('%Y%m/%Y%m%d/') + file_name
-        print('File URL: ' + URL)
-        # urllib.request.urlretrieve(URL, path_to_file)
-        with urlopen(URL) as response, open(path_to_file, 'wb') as outfile:
-          print('Loading file', file_name, 'with size', int(response.length/1024/1024), 'M from remote host.')
-          if response.status == 200 and response.length > 10:
-            shutil.copyfileobj(response, outfile)
-          else:
-            sys.exit('Error file not found!')
+              '%Y%m%d_%H%M_') + forecast_suffix + FILE_TYPE
+      path_to_file = os.path.join(DATA_FOLDER, file_name)
 
-        message = 'File URL: ' + URL
-        # rc = run("""echo \"{message}\" """.format(message=message), shell=True)
+      URL = DOMAIN + start_forecast_date.strftime('%Y%m/%Y%m%d/') + file_name
+      parse_messages('File URL: ' + URL)
+      response = None
+      try:
+        response = urlopen(URL)
+      except Exception as ex:
+        parse_messages('Error, while loading file ' + file_name + ' ' + ex)
+      else:
+        if os.path.isfile(path_to_file) and os.stat(path_to_file).st_size == response.length:
+          parse_messages("File "+file_name+str(int(os.stat(path_to_file).st_size/1024/1024))+" M exist, skip loading.")
+          parse_available_file(end_forecast_date, file_name)
+          end_forecast_date = start_forecast_date = end_forecast_date + \
+              timedelta(hours=3)
+          continue
+        else:
+          print('Loading file', file_name, 'with size', int(
+              response.length/1024/1024), 'M from remote host.')
+          if response.status == 200 and response.length > 10:
+              outfile = open(path_to_file, 'wb')
+              try:
+                  shutil.copyfileobj(response, outfile)
+              finally:
+                  outfile.close()
         parse_available_file(end_forecast_date, file_name)
+      finally:
+        if response is not None:
+            response.close()
       end_forecast_date = start_forecast_date = end_forecast_date + \
           timedelta(hours=3)
-
-
-logging.info('Finished loading grib data and filling AVAILABLE file, it took ' +
+  parse_messages('Finished loading grid data and filling AVAILABLE file, it took ' +
              str(datetime.now()-start_loading_time)+'.\n')
