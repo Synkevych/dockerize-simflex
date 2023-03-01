@@ -63,6 +63,6 @@ ENV PATH /simflex_v1/src/:$PATH
 # COPY grib_data/ /data/grib_data
 
 WORKDIR /data/calculations/test
-CMD ["python3", "/data/calculations/test/parser.py"]
+CMD ["python3", "-u", "/data/calculations/test/parser.py"]
 
-VOLUME [ "/data" ]
+# VOLUME [ "/data" ]

@@ -6,7 +6,7 @@ import logging
 import csv
 import xml.etree.ElementTree as ET
 from subprocess import run
-from download_grib import *
+from download_grid import *
 from datetime import datetime, timedelta
 
 logging.basicConfig(filename="parsing.log", level=logging.INFO,
@@ -296,7 +296,7 @@ def parse_releases_file(releases_params):
 user_params = get_xml_params()
 
 # First date from user last is the last release date + 1 hour
-download_grib(user_params['start_date_time'], releases_params[-1]['end_date_time'])
+download_grid(user_params['start_date_time'], releases_params[-1]['end_date_time'])
 
 parse_command_file()
 parse_outgrid_file()
