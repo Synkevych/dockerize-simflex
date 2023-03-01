@@ -16,7 +16,7 @@
   - [Resources](#resources)
 
 Flexpart conternization with simflex.  
-To make Flexpart work you should install all required libraries and provide required inputs. This project is created to make it easy all steps explained previously .
+To make Flexpart work you should install all required libraries and provide required inputs. This project is created to make it easy and isolated from your work environment.
 
 ## Flexpart
 
@@ -54,6 +54,8 @@ FLEXPART (“FLEXible PARTicle dispersion model”) is a Lagrangian transport an
 `docker run --rm -it --entrypoint bash simflex:v1`
 2. Run the calculations by running container using created image:  
 `docker run --name simflex simflex:v1`
+2.1 Connect to the container without calculations(for example test purpose)
+`docker run -it --name simflex --entrypoint /bin/bash simflex:v1`
 3. For connect to the container use:  
 `docker exec -it simflex:v1 /bin/bash`
 4. After completed calculation container will be stopped. Folder hierarchy will be:
