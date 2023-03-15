@@ -134,7 +134,7 @@ Open Multi-Processing ([OpenMP](http://www.openmp.org/))
 |Docker|Ubuntu 18.04.4|MPI|Intel Xeon CPU E5335 2.0GHs(15)|8|15.66GiB|3600|10000|3:44:23.769362|
 |Docker|Windows 10|MPI|Intel Core i5-8250U 1.6GHs(142)|4|10Gb|3600|10000|1:47:01.369211|
 |Docker|Windows 10|MPI|Intel Core i5-8250U 1.6GHs(142)|8|16Gb|3600|10000|1:45:34.842323|
-|Server|Ubuntu 18.04|MPI|Intel Xeon Gold 6240 2.6GHz(85)|72|187G|3600|10000|3977s or 66m|
+|Server|Ubuntu 18.04|MPI|Intel Xeon Gold 6240 2.6GHz(85)|72|187G|3600|10000|1:02:03.195422|
 
 > Serial - single core, MPI – multiply core using open-mpi  
 > CPUs value show all cores virtual and real
