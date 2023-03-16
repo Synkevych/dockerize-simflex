@@ -15,16 +15,15 @@
 ! Author: Ivan Kovalets
 
     program main_simflex
-    use SIMFLEX,only:lat,lon,nlon,nlat,Nobs,AllSRS,id_obs,&
-     Obs_Correct,nhgt,create_grid,PassInpSettings,&
+    use SIMFLEX,only:lat,lon,nlon,nlat,Nobs,AllSRS,id_obs, &
+     Obs_Correct,nhgt,create_grid,PassInpSettings, &
      syear,smon,sday,shr,sminut,loutstep,min_duration,tstart_max, &
-     thresh_start,dlon,dlat, DHgt,outlon0,outlat0,&
-     def_maxtsrcind,def_ndur_min,def_tstartmax,& ! - these are subroutines
-     input_dirname,output_dirname
+     thresh_start,dlon,dlat,DHgt,input_dirname,output_dirname, &
+     def_maxtsrcind,def_ndur_min,def_tstartmax ! - these are subroutines
 
     implicit none
     integer,parameter:: MaxIsolines=100
-!Inputs    
+! Inputs
     integer nhgt_,Niso_,loutstep_
     real Isolines_(MaxIsolines)
     real ThreshProb_,min_duration_,tstart_max_,thresh_start_,DHgt_
@@ -45,7 +44,7 @@
     
     Isolines_=10
 
-    open(10,file=trim(input_dirname)//'simflexinp.nml',form='formatted',IOSTAT=ierr1)
+    open(10,file=trim(input_dirname) // 'simflexinp.nml',form='formatted',IOSTAT=ierr1)
     if(ierr1.ne.0)then
       write(6,*)'Error opening namelist file simflexinp.nml'
       stop
@@ -73,33 +72,6 @@
      
      call Check_Iso(Isolines_,Niso_)
 
-!Inputs init (to be replaced by reading from file):
-!     redirect_console=.false.
-!     nhgt_=1
-!     Niso_=11
-!     do i=1,9
-!       Isolines_(i)=0.1*real(i)
-!     enddo
-!     Isolines_(10)=0.95
-!     Isolines_(11)=0.99
-!     Threshprob_=0.9
-!     syear_=2020
-!     smon_=4
-!     sday_=18
-!     shr_=0
-!     sminut_=0
-!     loutstep_=360 !sec
-!     tstart_max_=-9999.0 !hrs
-!     min_duration_=360 !sec
-!     thresh_start_=1.0 !factor
-!     dlon_=0.1
-!     dlat_=0.1
-!     outlon_=0.
-!     outlat_=37.8
-!     nlon_=400
-!     nlat_=322
-!     DHgt_=200
-     
 !Pass inputs to module     
      call PassInpSettings(nhgt_,Niso_,Isolines_,Threshprob_)
      syear=syear_
@@ -114,8 +86,6 @@
      
      dlon=dlon_
      dlat=dlat_
-     outlon0=outlon_
-     outlat0=outlat_
      nlon=nlon_
      nlat=nlat_
      DHgt=DHgt_
@@ -124,8 +94,8 @@
     if(redirect_console)then
        open(6,FILE=trim(output_dirname)//'console.dat')
     endif
-
-    call read_measurements(trim(input_dirname)//'measurem.csv',27)
+    
+    call read_measurements(trim(input_dirname)//'measurem.csv')
     
     call convert_obstimes ! convert to time frame relevant to start time of simulation (in days)
     
@@ -137,7 +107,7 @@
     
     call def_ndur_min ! minimum release duration and index
 
-    call read_srs_paths(trim(input_dirname)//'table_srs_paths.txt',34)
+    call read_srs_paths(trim(input_dirname) // 'table_srs_paths.txt')
     
     call check_init_locobs_id
     
@@ -169,22 +139,15 @@
     
     call save_times_mass
 
+! create file done.txt after successfull calculation
+    open(11,FILE='/data/done.txt')
+    close(11)
 
     if(redirect_console)then
        close(6)
     endif
     
     stop
-! This section is to be deleted; previously used for testing only
-    Nobs=31
-    
-    allocate(id_obs(Nobs))
-    do i=1,Nobs
-       id_obs(i)=Nobs-i+1
-    enddo
-    write(6,*)minloc(abs(id_obs-1))
-    allocate(AllSRS(Nobs))
-    !call readbin_4d('srs_1.bin',9,AllSRS(1)%srs,nlon_,nlat_,nhgt,nt)
 
     end program main_simflex
     subroutine Check_Iso(Isolines,Niso)

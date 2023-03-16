@@ -34,18 +34,6 @@ RUN cd flexpart_v10.4/src \
 ENV PATH /flexpart_v10.4/src/:$PATH
 
 #
-# Copy input files and test calculation
-#
-RUN mkdir /data/ && mkdir /data/calculations/
-
-RUN cp -r /flexpart_v10.4/test/ /data/calculations/ \
-  && cd /data/calculations/test/ \
-  && cp /flexpart_v10.4/download_grid.py . \
-  && cp /flexpart_v10.4/parser.py . \
-  && cp /flexpart_v10.4/pathnames . \
-  && cp -r /flexpart_v10.4/options .
-
-#
 # Compile SIMFLEX
 #
 
@@ -58,11 +46,10 @@ RUN cd /simflex_v1/src \
 
 ENV PATH /simflex_v1/src/:$PATH
 
-# Start calculations
 
 # COPY grib_data/ /data/grib_data
 
-WORKDIR /data/calculations/test
-CMD ["python3", "-u", "/data/calculations/test/parser.py"]
+COPY calculation/ /calculation
 
-# VOLUME [ "/data" ]
+WORKDIR /calculation
+CMD ["python3", "-u", "/calculation/parser.py"]

@@ -50,7 +50,8 @@
 
 ! output results
        open(1110,FILE=trim(output_dirname)//normcorname)
-       if(ifdebug_out)open(1111,FILE=output_dirname//normcor_debug)
+       if(ifdebug_out) open(1111,FILE=output_dirname
+     &      //normcor_debug)
        write(1111,*)'cell_id,lon,lat,normcor'
        k=0
        do j=1,nlat
@@ -65,17 +66,19 @@
        if(ifdebug_out)close(1111)
        close(1110)
       
-       open(1111,FILE=trim(output_dirname)//'Table.txt')
-       write(1111,*)'% of_maxcor, Probability; MaxCor=',MaxCor0
-       do k=1,Niso
-        write(1111,*)Isolines(k),Prob_iso(k)
-       enddo
+       open(1111,FILE=trim(output_dirname)//'maxcor.txt')
+       write(1111,*) MaxCor0
        close(1111)
-      
+
+       open(1112,FILE=trim(output_dirname)//'Table.txt')
+       write(1112,*)'% of_maxcor, Probability; MaxCor=',MaxCor0
+       do k=1,Niso
+        write(1112,*)Isolines(k),Prob_iso(k)
+       enddo
+       close(1112)
 
        write(6,*)' '
 
-      
        continue
 
       end subroutine  eval_srcloc

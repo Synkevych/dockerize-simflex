@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 
 import os
-import sys
-import logging
 import csv
 import xml.etree.ElementTree as ET
 from subprocess import run
-from download_grid import *
+from download_grid import download_grid
 from datetime import datetime, timedelta
-
-logging.basicConfig(filename="parsing.log", level=logging.INFO,
-                    format="%(asctime)s %(message)s")
+from helper import parse_messages, write_to_file, create_folder
 
 basename = os.getcwd()
-simflex_input_path = '/simflex_input/'
+simflex_dir_path = basename + '/simflex_input/'
 template_header = """***************************************************************************************************************
 *                                                                                                             *
 *   Input file for the Lagrangian particle dispersion model FLEXPART                                           *
@@ -25,32 +21,11 @@ user_params = {}
 releases_params = []
 measurem_csv_params = "#Use?;Id;Station_id;Lat;Lon;Start_date;Start_time;End_date;End_time;Mass;Sigma_or_ldl;Backgr\n"
 
-if not os.path.exists(basename + simflex_input_path):
-  os.makedirs(basename + simflex_input_path)
-
-if not os.path.exists('output'):
-    os.makedirs('output')
-
-def parse_messages(message, exit=False):
-  message = message + "\n"
-
-  if exit:
-    logging.error(message)
-    sys.exit(message)
-  else:
-    logging.info(message)
-    rc = run("""echo \"{message}\" """.format(message=message), shell=True)
-
-def write_to_file(folder_name, file_name, contents, mode='w'):
-  full_file_path = basename + folder_name + file_name
-
-  file = open(full_file_path, mode)
-  file.write(contents)
-  file.close()
-  logging.info('Parsing {0} file compleated.'.format(file_name))
+create_folder(simflex_dir_path)
+create_folder('output')
 
 def get_xml_params():
-  xml_tree = ET.parse(os.path.basename(basename) + '.xml')
+  xml_tree = ET.parse('/data/input/test.xml')  # filepath + file name
   xml_root = xml_tree.getroot()
   start_date_time_str = xml_root.find('imin').text
   end_date_time_str = xml_root.find('imax').text
@@ -75,7 +50,8 @@ def get_xml_params():
       'loutstep': loutstep
   }
 
-with open(os.path.basename(basename) + '.txt', newline='') as csvfile:
+
+with open('/data/input/test.txt', newline='') as csvfile:  # open txt files
   csv_reader = csv.reader(csvfile, delimiter='\t')
   csv_header = next(csv_reader)
   for row in csv_reader:
@@ -154,7 +130,7 @@ def parse_command_file():
            date_2=end_date_time.strftime('%Y%m%d'),
            time_2=end_date_time.strftime('%H%M%S'),
            loutstep=user_params['loutstep'])
-  write_to_file('/options/', 'COMMAND', template_header + command_body)
+  write_to_file(basename + '/options/', 'COMMAND', template_header + command_body)
 
 def parse_outgrid_file():
   outgrid_template = """!*******************************************************************************
@@ -186,20 +162,20 @@ def parse_outgrid_file():
           dx_out=user_params['dx_out'],
           dy_out=user_params['dy_out'],
           maxheight=user_params['maxheight'])
-  write_to_file('/options/', 'OUTGRID', outgrid_template)
+  write_to_file(basename + '/options/', 'OUTGRID', outgrid_template)
 
 
-def parse_simflex_input_paths(id, file_path):
+def parse_simflex_input_params(id, file_path):
   filename = 'table_srs_paths.txt'
   file_header = """#obs_id;path_to_file;srs_id;
 """
   file_content = """{obs_id};{path_to_file};{srs_id}
 """.format(obs_id=id, path_to_file=file_path, srs_id=1)
 
-  if not os.path.isfile(basename + simflex_input_path + filename):
-    write_to_file(simflex_input_path, filename, file_header + file_content)
+  if not os.path.isfile(simflex_dir_path + filename):
+    write_to_file(simflex_dir_path, filename, file_header + file_content)
   else:
-    write_to_file(simflex_input_path, filename, file_content, 'a')
+    write_to_file(simflex_dir_path, filename, file_content, 'a')
 
 def parse_simflex_inputs():
   start_date_time = user_params['start_date_time']
@@ -240,8 +216,8 @@ $end
           ny=user_params['num_y_grid'],
           minheight=user_params['minheight'],
           maxheight=user_params['maxheight'])
-  write_to_file(simflex_input_path, 'simflexinp.nml', simflexinp_template)
-  write_to_file(simflex_input_path, 'measurem.csv', measurem_csv_params)
+  write_to_file(simflex_dir_path, 'simflexinp.nml', simflexinp_template)
+  write_to_file(simflex_dir_path, 'measurem.csv', measurem_csv_params)
 
 def parse_releases_file(releases_params):
   SPECIES_BY_ID = {"O3": '002', "NO": '003', "NO2": '004',
@@ -290,7 +266,7 @@ def parse_releases_file(releases_params):
              minheight=user_params['minheight'],
              maxheight=user_params['maxheight'])
 
-  write_to_file('/options/', 'RELEASES', template_header +
+  write_to_file(basename + '/options/', 'RELEASES', template_header +
                 release_header + release_body)
 
 user_params = get_xml_params()
@@ -311,8 +287,8 @@ for param in releases_params:
   # move output prognose to simflex folder and rename it according to the release id
   id = param['id']
   old_output_file_path = basename + '/output/' + output_filename_prefix + '.nc'
-  new_output_file_path = basename + simflex_input_path + \
-      output_filename_prefix + '_' + id + '.nc'
+  new_output_file_path = simflex_dir_path + output_filename_prefix + \
+    '_' + id + '.nc'
 
   # skip calculation if output file exist
   if not os.path.isfile(new_output_file_path):
@@ -324,12 +300,12 @@ for param in releases_params:
 
     if os.path.isfile(old_output_file_path):
       os.rename(old_output_file_path,  new_output_file_path)
-      parse_simflex_input_paths(id, new_output_file_path)
+      parse_simflex_input_params(id, new_output_file_path)
       parse_messages(
           "FLEXPART completed the calculation of {i} release.".format(i=id))
       # for test purpose only, should be removed
       os.rename(basename + '/output/',  basename + '/output_' + id)
-      os.makedirs('output')
+      create_folder('output')
     else:
       message = "Calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(
           id)

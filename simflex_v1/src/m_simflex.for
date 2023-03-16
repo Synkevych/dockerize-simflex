@@ -8,15 +8,15 @@
       integer locobsid(MAXOBS)
       logical,parameter::ifdebug_out=.TRUE.
       
-      character(15),parameter::output_dirname="simflex_output/"
-      character(14),parameter::input_dirname="simflex_input/"
+      character(13),parameter::output_dirname='/data/output/'
+      character(14),parameter::input_dirname='simflex_input/'
 
-      character(1024),parameter::normcorname='normcor.dat'
-      character(1024),parameter::timesmassname='times_mass.dat'
-      character(1024),parameter::gridname='grid.dat'
+      character(8),parameter::normcorname='corr.dat'
+      character(18),parameter::timesmassname='times_mass_cor.dat'
+      character(8),parameter::gridname='grid.dat'
       
-      character(1024),parameter::normcor_debug='normcor_debug.dat'
-      character(1024),parameter::timesmass_debug='times_mass_debug.dat'
+      character(17),parameter::normcor_debug='normcor_debug.dat'
+      character(20),parameter::timesmass_debug='times_mass_debug.dat'
       
 !USER INPUTS      
 !Date-time parameters of the simulation run
