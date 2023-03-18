@@ -1,15 +1,16 @@
 !this is stub read subroutine(!)
       subroutine readlonlat
       use SIMFLEX,only:lon,lat,nlon,nlat,dlon,dlat,outlon0,outlat0,
-     &                 id_obs,srsfiles,locobsid
+     &                 id_obs,srsfiles,locobsid,full_output_path,
+     &                 output_dirname
       implicit none
       include 'netcdf.inc'
       
       integer nlon_,nlat_
       real outlon_,outlat_
-      integer state,ncid,J,x_id,y_id,nstr
+      integer state,ncid,J,x_id,y_id,nstr,cvar_id
       character*(nf_max_name) recname
-!     real,allocatable:lon
+      character(len=100) :: nuclide_name ! Attribute name
 
        J=locobsid(id_obs(1))
  
@@ -30,16 +31,13 @@
        
        state = nf_inq_dim(ncid,2,recname,nlon_)
        if(state.ne.nf_noerr) call handle_err(state)
-       !write(*,*)'nlon_=',nlon_
        
        state = nf_inq_dim(ncid,3,recname,nlat_)
        if(state.ne.nf_noerr) call handle_err(state)
-       !write(*,*)'nlat_=',nlat_
 
        state=nf_get_att_real(ncid,NF_GLOBAL,'outlon0',
      &                           outlon_)
         if(state.ne.nf_noerr) call handle_err(state)
-       !write(*,*)'outlon_=',outlon_
          
        state=nf_get_att_real(ncid,NF_GLOBAL,'outlat0',
      &                           outlat_)
@@ -48,9 +46,6 @@
 
         if(abs(outlon0-outlon_).gt.0.00001)goto 2224
         if(abs(outlat0-outlat_).gt.0.00001)goto 2224
-
-!       call readbin_1d('lat.bin',7,lat,nlat_)
-!       call readbin_1d('lon.bin',7,lon,nlon_)
        
        if(nlon.ne.nlon_.or.nlat.ne.nlat)then
         goto 2223
@@ -75,6 +70,14 @@
        if(abs(lat(2)-lat(1)-dlat).gt.0.00001)then
          goto 2222
        endif
+
+! Retreive nuclide name
+       state = nf_inq_varid(ncid,'spec001_mr',cvar_id)
+       if(state.ne.nf_noerr) call handle_err(state)
+
+       state=nf_get_att_text(ncid,cvar_id,'long_name',nuclide_name)
+       if(state.ne.nf_noerr) call handle_err(state)
+       full_output_path = output_dirname//trim(nuclide_name)//"/"
 
        state = nf_close(ncid)
        if(state.ne.nf_noerr) call handle_err(state)

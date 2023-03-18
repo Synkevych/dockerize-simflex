@@ -15,11 +15,12 @@
 ! Author: Ivan Kovalets
 
     program main_simflex
-    use SIMFLEX,only:lat,lon,nlon,nlat,Nobs,AllSRS,id_obs, &
-     Obs_Correct,nhgt,create_grid,PassInpSettings, &
-     syear,smon,sday,shr,sminut,loutstep,min_duration,tstart_max, &
-     thresh_start,dlon,dlat,DHgt,input_dirname,output_dirname, &
-     def_maxtsrcind,def_ndur_min,def_tstartmax ! - these are subroutines
+    use SIMFLEX,only:lat,lon,nlon,nlat,Nobs,AllSRS,id_obs,&
+     Obs_Correct,nhgt,create_grid,PassInpSettings,&
+     syear,smon,sday,shr,sminut,loutstep,min_duration,tstart_max,&
+     thresh_start,dlon,dlat,DHgt,outlon0,outlat0,&
+     def_maxtsrcind,def_ndur_min,def_tstartmax,& ! - these are subroutines
+     input_dirname,output_dirname
 
     implicit none
     integer,parameter:: MaxIsolines=100
@@ -44,7 +45,7 @@
     
     Isolines_=10
 
-    open(10,file=trim(input_dirname) // 'simflexinp.nml',form='formatted',IOSTAT=ierr1)
+    open(10,file=input_dirname//'simflexinp.nml',form='formatted',IOSTAT=ierr1)
     if(ierr1.ne.0)then
       write(6,*)'Error opening namelist file simflexinp.nml'
       stop
@@ -86,16 +87,18 @@
      
      dlon=dlon_
      dlat=dlat_
+     outlon0=outlon_
+     outlat0=outlat_
      nlon=nlon_
      nlat=nlat_
      DHgt=DHgt_
      
     ! Body of simflex
     if(redirect_console)then
-       open(6,FILE=trim(output_dirname)//'console.dat')
+       open(6, FILE = output_dirname // 'console.dat')
     endif
     
-    call read_measurements(trim(input_dirname)//'measurem.csv')
+    call read_measurements(input_dirname // 'measurem.csv')
     
     call convert_obstimes ! convert to time frame relevant to start time of simulation (in days)
     
@@ -107,7 +110,7 @@
     
     call def_ndur_min ! minimum release duration and index
 
-    call read_srs_paths(trim(input_dirname) // 'table_srs_paths.txt')
+    call read_srs_paths(input_dirname // 'table_srs_paths.txt')
     
     call check_init_locobs_id
     
