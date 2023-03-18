@@ -14,8 +14,6 @@
       character(18),parameter::timesmassname='times_mass_cor.dat'
       character(8),parameter::gridname='grid.dat'
 
-      character(10),parameter::maxcor_filename='maxcor.txt'
-
       character(17),parameter::normcor_debug='normcor_debug.dat'
       character(20),parameter::timesmass_debug='times_mass_debug.dat'
       character (len=:), allocatable :: full_output_path  ! Outpuf folder name

@@ -3,10 +3,9 @@
 !present implementation only for sources at single vertical level (single vertical level in srs)
       subroutine eval_srcloc()
       use SIMFLEX,only:Nobs,Obs_val1,AllSRS,MaxCor0,Imax0,
-     & Jmax0,normcor0,nlon,nlat,MAXOBS,gridcells,lon,lat,
-     & Niso,Prob_iso,Isolines,normcorname,ifdebug_out,
-     & normcor_debug,full_output_path,maxcor_filename,
-     & table_filename
+     &Jmax0,normcor0,nlon,nlat,MAXOBS,gridcells,lon,lat,
+     &Niso,Prob_iso,Isolines,normcorname,ifdebug_out,
+     &normcor_debug,full_output_path
      
       implicit none
       integer i,j,k
@@ -67,11 +66,11 @@
        if(ifdebug_out)close(1111)
        close(1110)
       
-       open(1111, FILE=full_output_path // maxcor_filename)
+       open(1111, FILE=full_output_path // 'maxcor.txt')
        write(1111,'(F4.2)') MaxCor0
        close(1111)
 
-       open(1112, FILE=full_output_path // table_filename)
+       open(1112, FILE = full_output_path // 'Table.txt')
        write(1112,'(A)') '% of_maxcor Probability'
        do k=1,Niso
         write(1112,'(F4.2, F5.2)') Isolines(k), Prob_iso(k)
