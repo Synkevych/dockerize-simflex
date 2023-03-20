@@ -6,7 +6,7 @@
       contains
       function getArg(n) result(arg)
         implicit none
-        character(MAX_LINE) :: arg
+        character(len=:), allocatable :: arg
         integer :: n,i,j,count
         j = 0
         do count=1,n

@@ -60,7 +60,7 @@
           if(ifdebug_out)write(1111,*)
      &                   gridcells(i,j),lon(i),lat(j),normcor0(i,j)
      
-          write(1110,*)gridcells(i,j),normcor0(i,j)
+          write(1110,'(F8.6)') normcor0(i,j)
        enddo
        enddo
        if(ifdebug_out)close(1111)

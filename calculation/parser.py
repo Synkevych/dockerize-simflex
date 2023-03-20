@@ -25,7 +25,7 @@ create_folder(simflex_dir_path)
 create_folder('output')
 
 def get_xml_params():
-  xml_tree = ET.parse('/data/input/test.xml')  # filepath + file name
+  xml_tree = ET.parse('/data/input/options.xml')  # filepath + file name
   xml_root = xml_tree.getroot()
   start_date_time_str = xml_root.find('imin').text
   end_date_time_str = xml_root.find('imax').text
@@ -51,7 +51,7 @@ def get_xml_params():
   }
 
 
-with open('/data/input/test.txt', newline='') as csvfile:  # open txt files
+with open('/data/input/measurements.txt', newline='') as csvfile:  # open txt files
   csv_reader = csv.reader(csvfile, delimiter='\t')
   csv_header = next(csv_reader)
   for row in csv_reader:
@@ -303,11 +303,11 @@ for param in releases_params:
       parse_simflex_input_params(id, new_output_file_path)
       parse_messages(
           "FLEXPART completed the calculation of {i} release.".format(i=id))
-      # for test purpose only, should be removed
-      os.rename(basename + '/output/',  basename + '/output_' + id)
-      create_folder('output')
+      # save flexpart output after each calculations othervise it will be rewrited
+      # os.rename(basename + '/output/',  basename + '/output_' + id)
+      # create_folder('output')
     else:
-      message = "Calculation didn\'t complete successful for {0} release, check the outputs or input parameters.".format(
+      message = "Calculation didn\'t complete successful for {0} release, check the output/input parameters.".format(
           id)
       parse_messages(message, True)
   else:

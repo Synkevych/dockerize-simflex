@@ -6,15 +6,10 @@
       integer,dimension(Nsz),intent(in) :: array
       integer,intent(in) :: val
       integer,intent(out) :: findloc
-
-!      integer,intent(in) :: array(*)
       integer i
 
-!      Nsz=size(array)
-!      write(*,*)'Nsz=',Nsz
       findloc=0
       do i=1,Nsz
-!         write(*,*)'In findloc i=',i
          if(array(i).eq.val)then
             findloc=i
             exit

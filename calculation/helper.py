@@ -5,7 +5,7 @@ from subprocess import run
 import logging
 import sys
 
-logging.basicConfig(filename="parsing.log", level=logging.INFO,
+logging.basicConfig(filename="/data/calculations_server.log", level=logging.INFO,
                     format="%(asctime)s %(message)s")
 
 def parse_messages(msg, exit=False):
