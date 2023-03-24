@@ -27,7 +27,7 @@ def parse_available_file(date=None, file_name=None):
           file_name=file_name)
   write_to_file('','AVAILABLE', available_template_body, 'a')
 
-
+# dry the function and make ability to provide different degrre or type if fine is not found
 def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="analysis"):  # '0.5' or 1.0
   parse_messages('Started loading grid data.')
 
@@ -40,7 +40,7 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
     start_date = date_start - timedelta(hours = date_start.hour % 3)
     end_date = date_end + timedelta(hours=3)
 
-    # download last dataset using end date
+    # end date must be divisible by three
     if end_date.hour % 3 == 1:
       end_date = date_end + timedelta(hours=2)
     elif end_date.hour% 3 == 2:
@@ -48,9 +48,9 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
     else:
       end_date = date_end + timedelta(hours=3)
 
-    days, seconds = (
-        end_date - start_date).days, (end_date - start_date).seconds
-    hours = (days * 24 + seconds / 3600) // 8
+    # days, seconds = (
+    #     end_date - start_date).days, (end_date - start_date).seconds
+    # hours = (days * 24 + seconds / 3600) // 8
 
     create_folder(DATA_FOLDER)
     write_to_file('', 'AVAILABLE', available_template_header)
@@ -64,7 +64,7 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
         PREFIX_BY_DEGREE[grid_degree] + '-' + grid_degree + "-degree/"
 
     if start_date < datetime(2005, 1, 2) or start_date > (datetime.now() - timedelta(days=2)):
-      parse_messages("Error can\'t find grid data for provided datetime.", True)
+      parse_messages("Error, grid data is not exist for provided datetime.", True)
       return
     elif start_date < datetime.now() - timedelta(days=1013):
       # historical available from 2019/08/01 - 2020/05/01-15
@@ -122,7 +122,7 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
               finally:
                   outfile.close()
           else:
-             parse_messages('Error, while loading file ' + file_name + ' file is not correct.\n')
+             parse_messages('Error, while loading file ' + file_name + ' file name or url is not correct.\n')
       finally:
         if response is not None:
             response.close()

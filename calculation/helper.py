@@ -12,6 +12,11 @@ def parse_messages(msg, exit=False):
 
   if exit:
     logging.error(msg)
+
+    file = open("/data/calculation_server.error", "a")
+    file.write(msg)
+    file.close()
+
     sys.exit(msg)
   else:
     logging.info(msg)
