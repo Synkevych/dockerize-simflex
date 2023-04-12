@@ -1,10 +1,9 @@
-      subroutine read_srs_paths(fname,nfname)
+      subroutine read_srs_paths(fname)
       use SIMFLEX,only:Nobs_all,srsfiles,id_obs_all,
      &                srs_ind_all,MAXOBS
       use parse
       implicit none
-      integer nfname
-      character(nfname) fname
+      character(1024) fname
       character(len=1024), dimension(MAXOBS) :: srsfiles_
       integer id_obs_all_(MAXOBS),srs_ind_all_(MAXOBS)
       integer nstr
@@ -17,7 +16,7 @@
       write(6,*)'Reading paths to flexpart files with srs-s'
       write(6,*)' '
           
-      OPEN(1024,FILE=fname(1:nfname))
+      OPEN(1024,FILE=fname(1:len(fname)))
       
       read(1024,"(A)")line
       L=0
@@ -43,7 +42,7 @@
       Nobs_all=L
       if(Nobs_all.eq.MAXOBS)then
         write(6,*)'Error from read_srs_paths: number of'
-        write(6,*)'lines in file ',fname(1:nfname)
+        write(6,*)'lines in file ',fname(1:len(fname))
         write(6,*)'reached value=',MAXOBS,'while maximum allowable'
         write(6,*)'value is:',MAXOBS-1
         write(6,*)'Please, revise the respective input file'

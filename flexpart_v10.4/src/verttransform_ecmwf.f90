@@ -726,7 +726,7 @@ subroutine verttransform_ecmwf(n,uuh,vvh,wwh,pvh)
      !********* TEST ************'**
 !teller(:)=0
 virr=virr+1
-WRITE(aspec, '(i3.3)'), virr
+WRITE(aspec, '(i3.3)') virr
 
 !if (readclouds) then
 !fnameH=trim(zhgpath)//trim(aspec)//'Vertical_placement.txt'
@@ -890,4 +890,3 @@ endif
     !      sum(ww(:,:,:,n)*ww(:,:,:,n)), &
     !      sum(clouds(:,:,:,n)), sum(cloudsh(:,:,n)),sum(idx),sum(pinmconv)
 end subroutine verttransform_ecmwf
-

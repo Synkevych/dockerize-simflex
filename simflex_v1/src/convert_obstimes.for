@@ -28,32 +28,32 @@
       
        do i=1,Nobs
          buf=Obs_datestart(i)(1:2)
-         read (buf,'(I2)'),day_s
+         read (buf,'(I2)') day_s
          buf=Obs_datestart(i)(4:5)
-         read (buf,'(I2)'),mon_s
+         read (buf,'(I2)') mon_s
          buf2=Obs_datestart(i)(7:10)
-         read (buf2,'(I4)'),year_s
+         read (buf2,'(I4)') year_s
 
          buf=Obs_utctstart(i)(1:2)
-         read (buf,'(I2)'),hr_s
+         read (buf,'(I2)') hr_s
          buf=Obs_utctstart(i)(4:5)
-         read (buf,'(I2)'),minut_s
+         read (buf,'(I2)') minut_s
          buf=Obs_utctstart(i)(7:8)
-         read (buf,'(I4)'),sec_s
+         read (buf,'(I4)') sec_s
 
          buf=Obs_dateend(i)(1:2)
-         read (buf,'(I2)'),day_e
+         read (buf,'(I2)') day_e
          buf=Obs_dateend(i)(4:5)
-         read (buf,'(I2)'),mon_e
+         read (buf,'(I2)') mon_e
          buf2=Obs_dateend(i)(7:10)
-         read (buf2,'(I4)'),year_e
+         read (buf2,'(I4)') year_e
 
          buf=Obs_utctend(i)(1:2)
-         read (buf,'(I2)'),hr_e
+         read (buf,'(I2)') hr_e
          buf=Obs_utctend(i)(4:5)
-         read (buf,'(I2)'),minut_e
+         read (buf,'(I2)') minut_e
          buf=Obs_utctend(i)(7:8)
-         read (buf,'(I4)'),sec_e
+         read (buf,'(I4)') sec_e
          
          tmp_start=dble(julian_date(year_s,mon_s,day_s))+
      &        dble(hr_s)/24+dble(minut_s)/24/60+dble(sec_s)/86400

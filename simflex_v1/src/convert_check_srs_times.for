@@ -38,18 +38,18 @@
          ietime=AllSRS(i)%ietime
          
          buf2=ibdate(1:4)
-         read (buf2,'(I4)'),year_s
+         read (buf2,'(I4)') year_s
          buf=ibdate(5:6)
-         read (buf,'(I2)'),mon_s
+         read (buf,'(I2)') mon_s
          buf=ibdate(7:8)
-         read (buf,'(I2)'),day_s
+         read (buf,'(I2)') day_s
 
          buf=ibtime(1:2)
-         read (buf,'(I2)'),hr_s
+         read (buf,'(I2)') hr_s
          buf=ibtime(3:4)
-         read (buf,'(I2)'),minut_s
+         read (buf,'(I2)') minut_s
          buf=ibtime(5:6)
-         read (buf,'(I4)'),sec_s      
+         read (buf,'(I4)') sec_s
          
          if(sec_s.ne.0.or.minut_s.ne.sminut.or.hr_s.ne.shr.or.
      &       day_s.ne.sday.or.mon_s.ne.smon.or.year_s.ne.syear)then
@@ -71,35 +71,35 @@
          endif 
 
          buf2=iedate(1:4)
-         read (buf2,'(I4)'),year_e
+         read (buf2,'(I4)') year_e
          buf=iedate(5:6)
-         read (buf,'(I2)'),mon_e
+         read (buf,'(I2)') mon_e
          buf=iedate(7:8)
-         read (buf,'(I2)'),day_e
+         read (buf,'(I2)') day_e
 
          buf=ietime(1:2)
-         read (buf,'(I2)'),hr_e
+         read (buf,'(I2)') hr_e
          buf=ietime(3:4)
-         read (buf,'(I2)'),minut_e
+         read (buf,'(I2)') minut_e
          buf=ietime(5:6)
-         read (buf,'(I4)'),sec_e
-         
+         read (buf,'(I4)') sec_e
+
          tflexmax=dble(julian_date(year_e,mon_e,day_e))+dble(hr_e)/24
      &                 +dble(minut_e)/24/60+dble(sec_e)/86400
 
          buf=Obs_dateend(i)(1:2)
-         read (buf,'(I2)'),day_e1
+         read (buf,'(I2)') day_e1
          buf=Obs_dateend(i)(4:5)
-         read (buf,'(I2)'),mon_e1
+         read (buf,'(I2)') mon_e1
          buf2=Obs_dateend(i)(7:10)
-         read (buf2,'(I4)'),year_e1
+         read (buf2,'(I4)') year_e1
 
          buf=Obs_utctend(i)(1:2)
-         read (buf,'(I2)'),hr_e1
+         read (buf,'(I2)') hr_e1
          buf=Obs_utctend(i)(4:5)
-         read (buf,'(I2)'),minut_e1
+         read (buf,'(I2)') minut_e1
          buf=Obs_utctend(i)(7:8)
-         read (buf,'(I4)'),sec_e1     
+         read (buf,'(I4)') sec_e1
 
          tobsend=dble(julian_date(year_e1,mon_e1,day_e1))+
      &           dble(hr_e1)/24+dble(minut_e1)/24/60+dble(sec_e1)/86400 

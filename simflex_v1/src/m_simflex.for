@@ -7,16 +7,16 @@
       integer,parameter::MAXOBS=10001
       integer locobsid(MAXOBS)
       logical,parameter::ifdebug_out=.TRUE.
-      
-      character(15),parameter::output_dirname="simflex_output/"
-      character(14),parameter::input_dirname="simflex_input/"
+      character(13),parameter::output_dirname='/data/output/'
+      character(14),parameter::input_dirname='simflex_input/'
 
-      character(1024),parameter::normcorname='normcor.dat'
-      character(1024),parameter::timesmassname='times_mass.dat'
-      character(1024),parameter::gridname='grid.dat'
-      
-      character(1024),parameter::normcor_debug='normcor_debug.dat'
-      character(1024),parameter::timesmass_debug='times_mass_debug.dat'
+      character(8),parameter::normcorname='corr.dat'
+      character(18),parameter::timesmassname='times_mass_cor.dat'
+      character(8),parameter::gridname='grid.dat'
+
+      character(17),parameter::normcor_debug='normcor_debug.dat'
+      character(20),parameter::timesmass_debug='times_mass_debug.dat'
+      character (len=:), allocatable :: full_output_path  ! Outpuf folder name
       
 !USER INPUTS      
 !Date-time parameters of the simulation run
@@ -226,9 +226,12 @@ corner of the grid
         allocate(cell_ilon(nlon*nlat))
         allocate(cell_jlat(nlon*nlat))
 
-        CALL system("mkdir -p "//output_dirname)
+        write(6,*) 'Creating output dir', full_output_path
 
-        open(1024,FILE=trim(output_dirname)//gridname)
+        CALL system("mkdir -p "//output_dirname)
+        CALL system("mkdir -p "//full_output_path)
+
+        open(1024, FILE = full_output_path // gridname)
         k=0
         do j=1,nlat
            do i=1,nlon
@@ -309,5 +312,3 @@ corner of the grid
       end subroutine readbin_4d
       
       end module SIMFLEX
-      
-     

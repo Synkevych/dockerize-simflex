@@ -3,7 +3,7 @@
 ! Use?;id_calc;No;Country;Lat;Lon;
 ! Date_start;HH:MM:SS_start;Date_end;HH:MM:SS_end;
 ! Val[Bq/m3];Sigma_OR_LDL[Bq/m3];Backgr[Bq/m3]
-       subroutine read_measurements(fname,nfname)
+       subroutine read_measurements(fname)
        use parse
        use SIMFLEX,only:Nobs,id_obs,Obs_lon,Obs_lat,
      &                   Obs_sig,Obs_bckgr,Obs_datestart,Obs_dateend,
@@ -11,8 +11,7 @@
      &                   Obs_val,MAXOBS
 
        implicit none
-       integer nfname
-       character(nfname) fname
+       character(1024) fname
 
        integer id_obs_(MAXOBS),Station_id_(MAXOBS)
        real Obs_lon_(MAXOBS),Obs_lat_(MAXOBS),Obs_val_(MAXOBS),
@@ -28,7 +27,7 @@
       write(6,*)'Reading measurements'
       write(6,*)' '
 
-      OPEN(1024,FILE=fname(1:nfname))
+      OPEN(1024,FILE=fname(1:len(fname)))
 
       read(1024,"(A)")line
       L=0
@@ -128,7 +127,7 @@
       Nobs=L
       if(Nobs.eq.MAXOBS)then
         write(6,*)'Error from read_measurements: number of'
-        write(6,*)'measurements read from file ',fname(1:nfname)
+        write(6,*)'measurements read from file ',fname(1:len(fname))
         write(6,*)'reached value=',MAXOBS,'while maximum allowable'
         write(6,*)'value is:',MAXOBS-1
         write(6,*)'Please, input file'

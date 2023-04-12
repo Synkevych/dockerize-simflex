@@ -5,7 +5,7 @@
       use SIMFLEX,only:Nobs,Obs_val1,AllSRS,MaxCor0,Imax0,
      &Jmax0,normcor0,nlon,nlat,MAXOBS,gridcells,lon,lat,
      &Niso,Prob_iso,Isolines,normcorname,ifdebug_out,
-     &normcor_debug,output_dirname
+     &normcor_debug,full_output_path
      
       implicit none
       integer i,j,k
@@ -49,8 +49,9 @@
 
 
 ! output results
-       open(1110,FILE=trim(output_dirname)//normcorname)
-       if(ifdebug_out)open(1111,FILE=output_dirname//normcor_debug)
+       open(1110, FILE = full_output_path // normcorname)
+       if(ifdebug_out)open(1111,FILE=full_output_path
+     &              //normcor_debug)
        write(1111,*)'cell_id,lon,lat,normcor'
        k=0
        do j=1,nlat
@@ -59,23 +60,25 @@
           if(ifdebug_out)write(1111,*)
      &                   gridcells(i,j),lon(i),lat(j),normcor0(i,j)
      
-          write(1110,*)gridcells(i,j),normcor0(i,j)
+          write(1110,'(F8.6)') normcor0(i,j)
        enddo
        enddo
        if(ifdebug_out)close(1111)
        close(1110)
       
-       open(1111,FILE=trim(output_dirname)//'Table.txt')
-       write(1111,*)'% of_maxcor, Probability; MaxCor=',MaxCor0
-       do k=1,Niso
-        write(1111,*)Isolines(k),Prob_iso(k)
-       enddo
+       open(1111, FILE=full_output_path // 'maxcor.txt')
+       write(1111,'(F4.2)') MaxCor0
        close(1111)
-      
+
+       open(1112, FILE = full_output_path // 'Table.txt')
+       write(1112,'(A)') '% of_maxcor Probability'
+       do k=1,Niso
+        write(1112,'(F4.2, F5.2)') Isolines(k), Prob_iso(k)
+       enddo
+       close(1112)
 
        write(6,*)' '
 
-      
        continue
 
       end subroutine  eval_srcloc
