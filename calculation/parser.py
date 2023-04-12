@@ -4,11 +4,7 @@ import os
 import csv
 import xml.etree.ElementTree as ET
 from subprocess import run
-<<<<<<< HEAD:calculation/parser.py
 from download_grid import download_grid
-=======
-from download_grid import *
->>>>>>> origin:flexpart_v10.4/parser.py
 from datetime import datetime, timedelta
 from helper import parse_messages, write_to_file, create_folder
 
