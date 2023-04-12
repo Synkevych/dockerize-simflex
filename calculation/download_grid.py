@@ -8,7 +8,6 @@ from helper import parse_messages, write_to_file, create_folder
 
 # 2 month equal to 44 Gb / calc speed and time needed to downloads this data
 
-
 HHMMSS = ['030000', '060000', '090000', '120000',
           '150000', '180000', '210000', '000000']
 FILE_HOURS = ['0000', '0000', '0600', '0600', '1200', '1200', '1800', '1800']
@@ -47,10 +46,6 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
       end_date = date_end + timedelta(hours=1)
     else:
       end_date = date_end + timedelta(hours=3)
-
-    # days, seconds = (
-    #     end_date - start_date).days, (end_date - start_date).seconds
-    # hours = (days * 24 + seconds / 3600) // 8
 
     create_folder(DATA_FOLDER)
     write_to_file('', 'AVAILABLE', available_template_header)
