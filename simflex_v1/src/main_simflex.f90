@@ -145,6 +145,8 @@
 ! create file done.txt after successfull calculation
     open(11,FILE='/data/done.txt')
     close(11)
+! Copy flexpart files to the host
+    CALL system("cp "//input_dirname//"grid_time_* "//output_dirname)
 
     if(redirect_console)then
        close(6)

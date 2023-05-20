@@ -180,7 +180,7 @@ def parse_simflex_input_params(id, file_path):
 def parse_simflex_inputs():
   start_date_time = user_params['start_date_time']
   simflexinp_template = """$simflexinp
-redirect_console=.false.,
+redirect_console=.true.,
 Niso_=11,
 Isolines_(1:11) = 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 0.99,
 Threshprob_=0.9,
