@@ -228,7 +228,6 @@ corner of the grid
 
         write(6,*) 'Creating output dir', full_output_path
 
-        CALL system("mkdir -p "//output_dirname)
         CALL system("mkdir -p "//full_output_path)
 
         open(1024, FILE = full_output_path // gridname)

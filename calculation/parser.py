@@ -47,7 +47,8 @@ def get_xml_params():
       'dy_out': xml_root.find('dlon').text,
       'minheight': min_height,
       'maxheight': xml_root.find('maxheight').text,
-      'loutstep': loutstep
+      'loutstep': loutstep,
+      'series_dir': '/series/' + xml_root.find('id_series').text
   }
 
 
@@ -283,11 +284,13 @@ end_date_time_str = (
 output_filename_prefix = 'grid_time_' + end_date_time_str
 start_calc_time = datetime.now()
 
+create_folder(user_params['series_path'])
+
 for param in releases_params:
   # move output prognose to simflex folder and rename it according to the release id
   id = param['id']
   old_output_file_path = basename + '/output/' + output_filename_prefix + '.nc'
-  new_output_file_path = simflex_dir_path + output_filename_prefix + \
+  new_output_file_path = user_params['series_path'] +"/"+ output_filename_prefix + \
     '_' + id + '.nc'
 
   # skip calculation if output file exist
@@ -299,11 +302,12 @@ for param in releases_params:
     rc = run("time FLEXPART_MPI", shell=True)
 
     if os.path.isfile(old_output_file_path):
-      os.rename(old_output_file_path,  new_output_file_path)
+      # os.rename(old_output_file_path,  new_output_file_path)
+      os.popen('cp ' + old_output_file_path + ' ' + new_output_file_path)
       parse_simflex_input_params(id, new_output_file_path)
       parse_messages(
           "FLEXPART completed the calculation of {i} release.".format(i=id))
-      # save flexpart output after each calculations othervise it will be rewrited
+      # save flexpart output after each calculations othervise it will be rewritten
       # os.rename(basename + '/output/',  basename + '/output_' + id)
       # create_folder('output')
     else:
@@ -311,6 +315,7 @@ for param in releases_params:
           id)
       parse_messages(message, True)
   else:
+    parse_simflex_input_params(id, new_output_file_path)
     parse_messages('Skip calculation, output file for {0} release exist.'.format(id))
     continue
 
