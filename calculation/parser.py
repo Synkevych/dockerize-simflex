@@ -284,13 +284,13 @@ end_date_time_str = (
 output_filename_prefix = 'grid_time_' + end_date_time_str
 start_calc_time = datetime.now()
 
-create_folder(user_params['series_path'])
+create_folder(user_params['series_dir'])
 
 for param in releases_params:
   # move output prognose to simflex folder and rename it according to the release id
   id = param['id']
   old_output_file_path = basename + '/output/' + output_filename_prefix + '.nc'
-  new_output_file_path = user_params['series_path'] +"/"+ output_filename_prefix + \
+  new_output_file_path = user_params['series_dir'] +"/"+ output_filename_prefix + \
     '_' + id + '.nc'
 
   # skip calculation if output file exist
