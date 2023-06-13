@@ -53,7 +53,7 @@ def get_xml_params():
 
 
 with open('/data/input/measurements.txt', newline='') as csvfile:  # open txt files
-  csv_reader = csv.reader(csvfile, delimiter='\t')
+  csv_reader = csv.reader(csvfile, delimiter=';')
   csv_header = next(csv_reader)
   for row in csv_reader:
       # name of params in row and it's order:
