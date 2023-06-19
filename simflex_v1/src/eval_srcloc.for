@@ -40,6 +40,14 @@
          
        enddo
       enddo
+!IK2023:
+      if(MaxCor0.le.0.01)then
+         write(6,*)'Error4 from SIMFLEX:'
+         write(6,*)'MaxCor=',MaxCor0,'is too low. No source in the'
+         write(6,*)'domain could explain the observed values'
+         stop
+      endif
+
       normcor0=normcor0/MaxCor0
 
       write(6,*)'MaxCor0=',MaxCor0
