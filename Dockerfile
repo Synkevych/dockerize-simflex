@@ -65,6 +65,3 @@ ENV PATH /flexpart_v10.4/src/:$PATH
 WORKDIR /calculation
 
 CMD ["python3", "-u", "/calculation/parser.py"]
-
-# Remove exited container to save the space
-# docker rm $(docker ps -a | grep -- "Exited" | awk '{ printf $1 " "}')
