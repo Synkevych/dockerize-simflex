@@ -28,8 +28,7 @@ def write_to_file(full_path, file_name, contents, mode='w'):
   file = open(full_path + file_name, mode)
   file.write(contents)
   file.close()
-  # for test purpose only could be removed
-  logging.info('Parsing {0} file compleated.'.format(file_name))
+  logging.info(f'Parsing {file_name} file compleated.')
 
 
 def create_folder(directory=None):

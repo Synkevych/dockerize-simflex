@@ -1,6 +1,14 @@
 FROM --platform=linux/amd64 ubuntu:18.04
 LABEL maintainer Synkevych Roman "synkevych.roman@gmail.com"
 
+# Set user and group as in your working machine
+ARG user=flexpart
+ARG group=flexpart
+ARG uid=1002
+ARG gid=1002
+RUN groupadd -g ${gid} ${group}
+RUN useradd -u ${uid} -g ${group} -s /bin/sh -m ${user}
+
 # Install all dependencies
 RUN apt-get update && apt-get install -y \
   openssh-server software-properties-common build-essential \
@@ -29,9 +37,7 @@ RUN cd flexpart_v10.4/src \
   && sed -i 's/LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper $(NCOPT)/LIBS = -leccodes_f90 -leccodes -lm -ljasper $(NCOPT)/' makefile_local \
   && make mpi ncf=yes -f makefile_local \
   && make clean \
-  && if ./FLEXPART_MPI | grep -q 'Welcome to FLEXPART'; then echo "Test FLEXPART binary successfuly."; else echo "Error on testing FLEXPART binary." && false; fi
-
-ENV PATH /flexpart_v10.4/src/:$PATH
+  && if ./FLEXPART_MPI | grep -q 'Welcome to FLEXPART'; then echo "Test FLEXPART binary successfully."; else echo "Error on testing FLEXPART binary." && false; fi
 
 #
 # Compile SIMFLEX
@@ -42,14 +48,23 @@ COPY simflex_v1/ /simflex_v1
 RUN cd /simflex_v1/src \
   && gfortran -c m_parse.for m_simflex.for \
   && gfortran *.f90 *.for -I/usr/include/ -L/usr/lib/ -lnetcdff -lnetcdf -o simflex \
-  && if ./simflex | grep -q 'Starting SIMFLEX'; then echo "Test simflex binary successfuly."; else echo "Error on testing simflex binary." && false; fi
+  && if ./simflex | grep -q 'Starting SIMFLEX'; then echo "Test simflex binary successfully."; else echo "Error on testing simflex binary." && false; fi
 
-ENV PATH /simflex_v1/src/:$PATH
-
+COPY calculation/ /calculation
+RUN chown -R flexpart /calculation/
 
 # COPY grib_data/ /data/grib_data
 
-COPY calculation/ /calculation
+# Switch to user flexpart
+USER ${uid}:${gid}
+
+# provide flexpart and simflex binaries to the new user PATH
+ENV PATH /simflex_v1/src/:$PATH
+ENV PATH /flexpart_v10.4/src/:$PATH
 
 WORKDIR /calculation
+
 CMD ["python3", "-u", "/calculation/parser.py"]
+
+# Remove exited container to save the space
+# docker rm $(docker ps -a | grep -- "Exited" | awk '{ printf $1 " "}')

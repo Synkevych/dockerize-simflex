@@ -94,7 +94,6 @@
      DHgt=DHgt_
     ! Body of simflex
     if(redirect_console)then
-       CALL system("mkdir -p "//output_dirname)
        open(6, FILE = output_dirname // 'console.dat')
     endif
     

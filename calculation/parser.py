@@ -48,7 +48,8 @@ def get_xml_params():
       'minheight': min_height,
       'maxheight': xml_root.find('maxheight').text,
       'loutstep': loutstep,
-      'series_dir': '/series/' + xml_root.find('id_series').text
+      'series_id': xml_root.find('id_series').text,
+      'calc_id': xml_root.find('id_calc').text
   }
 
 
@@ -271,61 +272,60 @@ def parse_releases_file(releases_params):
                 release_header + release_body)
 
 user_params = get_xml_params()
+calc_id = user_params['calc_id']
+series_id = user_params['series_id']
+series_dir = '/series/' + series_id
+last_release_end_date = releases_params[-1]['end_date_time']
+parse_messages(f'Calculation {calc_id} for series {series_id} started.')
 
 # First date from user last is the last release date + 1 hour
-download_grid(user_params['start_date_time'], releases_params[-1]['end_date_time'])
+download_grid(user_params['start_date_time'], last_release_end_date)
 
 parse_command_file()
 parse_outgrid_file()
 parse_simflex_inputs()
 
-end_date_time_str = (
-    releases_params[-1]['end_date_time'] + timedelta(hours=1)).strftime('%Y%m%d%H%M%S')
+end_date_time_str = (last_release_end_date + timedelta(hours=1)).strftime('%Y%m%d%H%M%S')
 output_filename_prefix = 'grid_time_' + end_date_time_str
 start_calc_time = datetime.now()
 
-create_folder(user_params['series_dir'])
+create_folder(series_dir)
 
 for param in releases_params:
   # move output prognose to simflex folder and rename it according to the release id
   id = param['id']
-  old_output_file_path = basename + '/output/' + output_filename_prefix + '.nc'
-  new_output_file_path = user_params['series_dir'] +"/"+ output_filename_prefix + \
-    '_' + id + '.nc'
-
-  # skip calculation if output file exist
-  if not os.path.isfile(new_output_file_path):
+  nuclide_name = param['species_name']
+  default_flexpart_file_path = f"{basename}/output/{output_filename_prefix}.nc"
+  new_flexpart_file_path = f"{series_dir}/{output_filename_prefix}_{id}.nc"
+  create_folder(f"{basename}/output/{nuclide_name}")
+  # skip calculation if the flexpart output file exist
+  # add aditional logic to check existance of the binaray file in the series folder
+  if not os.path.isfile(new_flexpart_file_path):
     parse_releases_file(param)
-    message = 'FLEXPART running {i} of {j} releases.'.format(
-        i=id, j=len(releases_params))
-    parse_messages(message)
+    parse_messages(f'FLEXPART running {id} of {len(releases_params)} releases.')
     rc = run("time FLEXPART_MPI", shell=True)
 
-    if os.path.isfile(old_output_file_path):
-      # os.rename(old_output_file_path,  new_output_file_path)
-      os.popen('cp ' + old_output_file_path + ' ' + new_output_file_path)
-      parse_simflex_input_params(id, new_output_file_path)
-      parse_messages(
-          "FLEXPART completed the calculation of {i} release.".format(i=id))
+    if os.path.isfile(default_flexpart_file_path):
+      os.popen(f"cp {default_flexpart_file_path} {new_flexpart_file_path}")
+      parse_simflex_input_params(id, new_flexpart_file_path)
+      parse_messages(f"FLEXPART completed the calculation of {id} release.")
       # save flexpart output after each calculations othervise it will be rewritten
       # os.rename(basename + '/output/',  basename + '/output_' + id)
       # create_folder('output')
     else:
-      message = "Calculation didn\'t complete successful for {0} release, check the output/input parameters.".format(
-          id)
+      message = f"Calculation didn't complete successfully for {id} release, check the output/input params."
       parse_messages(message, True)
   else:
-    parse_simflex_input_params(id, new_output_file_path)
-    parse_messages('Skip calculation, output file for {0} release exist.'.format(id))
+    parse_simflex_input_params(id, new_flexpart_file_path)
+    parse_messages(f'Skip calculation, output file for {id} release exist.')
     continue
 
-messages = 'FLEXPART finished all calculations, it took '+str(datetime.now()-start_calc_time)+".\n"
+messages = f"FLEXPART finished all calculations, it took {datetime.now()-start_calc_time}.\n"
 
 start_simflex_time = datetime.now()
-messages +=  "Starting simflex calculation.\n"
+parse_messages(f"Starting simflex calculation.\n")
 rc = run("simflex", shell=True)
 
-messages += 'SIMFLEX finished calculation, it took '+str(datetime.now()-start_simflex_time)+".\n"
-messages += 'All calculation took ' + \
-    str(datetime.now()-start_calc_time)
+messages += f'SIMFLEX finished calculation {calc_id} for series {series_id}, it took {datetime.now()-start_simflex_time}.\n'
+messages += f'All calculation took {datetime.now()-start_calc_time}'
 parse_messages(messages)
