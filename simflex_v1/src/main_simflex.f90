@@ -92,7 +92,6 @@
      nlon=nlon_
      nlat=nlat_
      DHgt=DHgt_
-     
     ! Body of simflex
     if(redirect_console)then
        open(6, FILE = output_dirname // 'console.dat')

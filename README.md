@@ -3,11 +3,6 @@
 - [dockerize-simflex](#dockerize-simflex)
   - [Flexpart](#flexpart)
   - [How parsing works](#how-parsing-works)
-      - [Creating COMMAND file for flexpart inputs](#creating-command-file-for-flexpart-inputs)
-      - [Creating OUTGRID file for flexpart inputs](#creating-outgrid-file-for-flexpart-inputs)
-      - [Creating simflexinp.nml and measurem.csv for simflex inputs](#creating-simflexinpnml-and-measuremcsv-for-simflex-inputs)
-      - [Creating RELEASES file for flexpart on each iteration](#creating-releases-file-for-flexpart-on-each-iteration)
-      - [Creating or updating table_srs_paths.txt file for simflex on each iteration](#creating-or-updating-table_srs_pathstxt-file-for-simflex-on-each-iteration)
   - [How to use](#how-to-use)
   - [Changes from the origin](#changes-from-the-origin)
     - [Changes in Flexpart](#changes-in-flexpart)
@@ -57,17 +52,20 @@ FLEXPART (“FLEXible PARTicle dispersion model”) is a Lagrangian transport an
 <summary><b>Other useful commands:</b></summary>
 <br>
 
-Copy grib file to docker container if you have them locally: `docker cp /path/grib.tar.gz container_id:/data/grib_data/`
+Copy grib file to docker container if you have them locally: `docker cp /path/grib.tar.gz container_id:/data/grib_data/`  
 Interact with image without calculation (all chabgesa and data will be lost after you disconnect): `docker run --rm -it --entrypoint bash simflex:v1`  
 Connect to the container without calculations(for example test purpose): `docker run -it --name simflex --entrypoint /bin/bash simflex:v1`
-Copy files/folders from container to current local locations: `docker cp simflex:/data/calculation .`   
+Copy files/folders from container to current local locations: `docker cp simflex:/data/calculation .`  
 If calculation didn't complete successful use logs file to understand the problem: `docker logs -t simflex`  
 All calculations also available on your machine(tested on Linux) because we copy all calculation to volume, but first you need to get volumes ID: `docker container inspect simflex | grep Source | awk -F\" '{print $4}'`
 Simflex output files inside the container will be located in the `/data/output/Nuclide-name/`, use this value as a path to your folder with all information:  
 ![volumes name and folders](/docs/volume_location.png)
 Delete image: `docker image rm simflex:v1`  
 Delete all images that not used: `docker image prune -f`  
-Increase performance by adding more cores and memory
+Increase performance by adding more cores and memory  
+`docker inspect 345cb4176398 | grep Source` get the path where the input data is located  
+`head ../input/measurements.txt | grep '^99;1;8' && head ../../4/input/measurements.txt | grep '^4;1;8'` - different between two files  
+`docker rm $(docker ps -q --filter "status=exited")` remove all exited containers
 </details>
 
 ## Changes from the origin

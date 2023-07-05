@@ -12,7 +12,7 @@ HHMMSS = ['030000', '060000', '090000', '120000',
           '150000', '180000', '210000', '000000']
 FILE_HOURS = ['0000', '0000', '0600', '0600', '1200', '1200', '1800', '1800']
 FILE_SUFFIX = ['003', '006']
-DATA_FOLDER = 'grid_data/'
+DATA_FOLDER = '/series/grid_data/'
 start_loading_time = datetime.now()
 available_template_header = """XXXXXX EMPTY LINES XXXXXXXXX
 XXXXXX EMPTY LINES XXXXXXXX
@@ -26,7 +26,7 @@ def parse_available_file(date=None, file_name=None):
           file_name=file_name)
   write_to_file('','AVAILABLE', available_template_body, 'a')
 
-# dry the function and make ability to provide different degrre or type if fine is not found
+# dry the function and make ability to provide different degree or type if fine is not found
 def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="analysis"):  # '0.5' or 1.0
   parse_messages('Started loading grid data.')
 

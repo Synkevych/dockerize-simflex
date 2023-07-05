@@ -12,8 +12,8 @@
 
        do i=1,Nselect
 
-          write(1024,*)grid_select(i),duration(i),start_time(i),Mass(i),
-     &                 Jmax_sol(i)
+          write(1024,*)grid_select(i),';',duration(i),';',
+     &                 start_time(i),';',Mass(i),';',Jmax_sol(i)
 
        enddo
        close(1024)
