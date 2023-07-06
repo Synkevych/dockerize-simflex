@@ -47,12 +47,14 @@ def get_xml_params():
       'dy_out': xml_root.find('dlon').text,
       'minheight': min_height,
       'maxheight': xml_root.find('maxheight').text,
-      'loutstep': loutstep
+      'loutstep': loutstep,
+      'series_id': xml_root.find('id_series').text,
+      'calc_id': xml_root.find('id_calc').text
   }
 
 
 with open('/data/input/measurements.txt', newline='') as csvfile:  # open txt files
-  csv_reader = csv.reader(csvfile, delimiter='\t')
+  csv_reader = csv.reader(csvfile, delimiter=';')
   csv_header = next(csv_reader)
   for row in csv_reader:
       # name of params in row and it's order:
@@ -94,15 +96,15 @@ with open('/data/input/measurements.txt', newline='') as csvfile:  # open txt fi
 def parse_command_file():
   start_date_time = user_params['start_date_time']
   end_date_time = releases_params[-1]['end_date_time'] + timedelta(hours=1)
-  command_body = """&COMMAND
+  command_body = f"""&COMMAND
  LDIRECT=              -1, ! Simulation direction in time   ; 1 (forward) or -1 (backward)
- IBDATE=         {date_1}, ! Start date of the simulation   ; YYYYMMDD: YYYY=year, MM=month, DD=day
- IBTIME=           {time_1}, ! Start time of the simulation   ; HHMISS: HH=hours, MI=min, SS=sec; UTC
- IEDATE=         {date_2}, ! End date of the simulation     ; same format as IBDATE
- IETIME=           {time_2}, ! End  time of the simulation    ; same format as IBTIME
- LOUTSTEP=        {loutstep}, ! Interval of model output; average concentrations calculated every LOUTSTEP (s)
- LOUTAVER=        {loutstep}, ! Interval of output averaging (s)
- LOUTSAMPLE=      {loutstep}, ! Interval of output sampling  (s), higher stat. accuracy with shorter intervals
+ IBDATE=         {start_date_time.strftime('%Y%m%d')}, ! Start date of the simulation   ; YYYYMMDD: YYYY=year, MM=month, DD=day
+ IBTIME=           {start_date_time.strftime('%H%M%S')}, ! Start time of the simulation   ; HHMISS: HH=hours, MI=min, SS=sec; UTC
+ IEDATE=         {end_date_time.strftime('%Y%m%d')}, ! End date of the simulation     ; same format as IBDATE
+ IETIME=           {end_date_time.strftime('%H%M%S')}, ! End  time of the simulation    ; same format as IBTIME
+ LOUTSTEP=        {user_params['loutstep']}, ! Interval of model output; average concentrations calculated every LOUTSTEP (s)
+ LOUTAVER=        {user_params['loutstep']}, ! Interval of output averaging (s)
+ LOUTSAMPLE=      {user_params['loutstep']}, ! Interval of output sampling  (s), higher stat. accuracy with shorter intervals
  ITSPLIT=        99999999, ! Interval of particle splitting (s)
  LSYNCTIME=            60, ! All processes are synchronized to this time interval (s)
  CTL=          -5.0000000, ! CTL>1, ABL time step = (Lagrangian timescale (TL))/CTL, uses LSYNCTIME if CTL<0
@@ -125,15 +127,11 @@ def parse_command_file():
  CBLFLAG=               0, ! Skewed, not Gaussian turbulence in the convective ABL, need large CTL and IFINE
  OHFIELDS_PATH= "../../flexin/", ! Default path for OH file
  /
-""".format(date_1=start_date_time.strftime('%Y%m%d'),
-           time_1=start_date_time.strftime('%H%M%S'),
-           date_2=end_date_time.strftime('%Y%m%d'),
-           time_2=end_date_time.strftime('%H%M%S'),
-           loutstep=user_params['loutstep'])
+"""
   write_to_file(basename + '/options/', 'COMMAND', template_header + command_body)
 
 def parse_outgrid_file():
-  outgrid_template = """!*******************************************************************************
+  outgrid_template = f"""!*******************************************************************************
 !                                                                              *
 !      Input file for the Lagrangian particle dispersion model FLEXPART         *
 !                       Please specify your output grid                        *
@@ -147,21 +145,15 @@ def parse_outgrid_file():
 ! OUTHEIGHTS = HEIGHT OF LEVELS (UPPER BOUNDARY)                               *
 !*******************************************************************************
 &OUTGRID
- OUTLON0=      {out_lon},
- OUTLAT0=     {out_lat},
- NUMXGRID=      {x_grid},
- NUMYGRID=      {y_grid},
- DXOUT=        {dx_out},
- DYOUT=        {dy_out},
- OUTHEIGHTS=   {maxheight},
+ OUTLON0=      {user_params['out_longitude']},
+ OUTLAT0=     {user_params['out_latitude']},
+ NUMXGRID=      {user_params['num_x_grid']},
+ NUMYGRID=      {user_params['num_y_grid']},
+ DXOUT=        {user_params['dx_out']},
+ DYOUT=        {user_params['dy_out']},
+ OUTHEIGHTS=   {user_params['maxheight']},
  /
-""".format(out_lon=user_params['out_longitude'],
-          out_lat=user_params['out_latitude'],
-          x_grid=user_params['num_x_grid'],
-          y_grid=user_params['num_y_grid'],
-          dx_out=user_params['dx_out'],
-          dy_out=user_params['dy_out'],
-          maxheight=user_params['maxheight'])
+"""
   write_to_file(basename + '/options/', 'OUTGRID', outgrid_template)
 
 
@@ -177,45 +169,34 @@ def parse_simflex_input_params(id, file_path):
   else:
     write_to_file(simflex_dir_path, filename, file_content, 'a')
 
-def parse_simflex_inputs():
-  start_date_time = user_params['start_date_time']
-  simflexinp_template = """$simflexinp
-redirect_console=.false.,
+def parse_simflex_inputs(series_id):
+  date_time = user_params['start_date_time']
+
+  simflexinp_template = f"""$simflexinp
+redirect_console=.true.,
 Niso_=11,
 Isolines_(1:11) = 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 0.99,
 Threshprob_=0.9,
-syear_={start_year},
-smon_={start_month},
-sday_={start_day},
-shr_={start_hour},
-sminut_={start_min},
-loutstep_={loutstep}, ! 3600 default
+syear_={date_time:%Y},
+smon_={date_time:%m},
+sday_={date_time:%d},
+shr_={date_time:%H},
+sminut_={date_time:%M},
+loutstep_={user_params['loutstep']}, ! 3600 default
 tstart_max_=-9999.0,
 thresh_start_=1.0,
-min_duration_={loutstep},
-dlon_={dlon},
-dlat_={dlat},
-outlon_={se_lon}, ! 0. default
-outlat_={se_lat},
-nlon_={nx},
-nlat_={ny},
-nhgt_={minheight}, ! 1 default
-DHgt_={maxheight}
+min_duration_={user_params['loutstep']},
+dlon_={user_params['dy_out']},
+dlat_={user_params['dx_out']},
+outlon_={user_params['out_longitude']}, ! 0. default
+outlat_={user_params['out_latitude']},
+nlon_={user_params['num_x_grid']},
+nlat_={user_params['num_y_grid']},
+nhgt_={user_params['minheight']}, ! 1 default
+DHgt_={user_params['maxheight']},
+series_id_={series_id}
 $end
-""".format(start_year=start_date_time.strftime('%Y'),
-          start_month=start_date_time.strftime('%m'),
-          start_day=start_date_time.strftime('%d'),
-          start_hour=start_date_time.strftime('%H'),
-          start_min=start_date_time.strftime('%M'),
-          loutstep=user_params['loutstep'],
-          dlon=user_params['dy_out'],
-          dlat=user_params['dx_out'],
-          se_lon=user_params['out_longitude'],
-          se_lat=user_params['out_latitude'],
-          nx=user_params['num_x_grid'],
-          ny=user_params['num_y_grid'],
-          minheight=user_params['minheight'],
-          maxheight=user_params['maxheight'])
+"""
   write_to_file(simflex_dir_path, 'simflexinp.nml', simflexinp_template)
   write_to_file(simflex_dir_path, 'measurem.csv', measurem_csv_params)
 
@@ -231,96 +212,90 @@ def parse_releases_file(releases_params):
                   "CH4": '026', "C2H6": '027', "C3H8": '028',
                   "PCB28": '031', "G-HCH": '034', "BC": '040'}
   species_id = int(SPECIES_BY_ID.get(releases_params['species_name']))
-  release_header = """&RELEASES_CTRL
+  release_header = f"""&RELEASES_CTRL
  NSPEC      =           1, ! Total number of species
- SPECNUM_REL=          {species_number}, ! Species numbers in directory SPECIES
+ SPECNUM_REL=          {species_id}, ! Species numbers in directory SPECIES
  /
-""".format(species_number=species_id)
+"""
 
-  release_body = """&RELEASE
- IDATE1  =     {date_1},
- ITIME1  =       {time_1},
- IDATE2  =     {date_2},
- ITIME2  =       {time_2},
- LON1    =        {lon_1},
- LON2    =        {lon_2},
- LAT1    =        {lat_1},
- LAT2    =        {lat_2},
- Z1      =           {minheight},
- Z2      =           {maxheight},
+
+  release_body = f"""&RELEASE
+ IDATE1  =     {releases_params['start_date_time'].strftime('%Y%m%d')},
+ ITIME1  =       {releases_params['start_date_time'].strftime('%H%M%S')},
+ IDATE2  =     {releases_params['end_date_time'].strftime('%Y%m%d')},
+ ITIME2  =       {releases_params['end_date_time'].strftime('%H%M%S')},
+ LON1    =        {releases_params['longitude_1']},
+ LON2    =        {releases_params['longitude_2']},
+ LAT1    =        {releases_params['latitude_1']},
+ LAT2    =        {releases_params['latitude_2']},
+ Z1      =           {user_params['minheight']},
+ Z2      =           {user_params['maxheight']},
  ZKIND   =             1,
- MASS    =     {mass},
+ MASS    =     {releases_params['mass']},
  PARTS   =        10000,
- COMMENT =  "{comment}",
+ COMMENT =  "{releases_params['comment']}",
  /
-""".format(date_1=releases_params['start_date_time'].strftime('%Y%m%d'),
-             time_1=releases_params['start_date_time'].strftime('%H%M%S'),
-             date_2=releases_params['end_date_time'].strftime('%Y%m%d'),
-             time_2=releases_params['end_date_time'].strftime('%H%M%S'),
-             lon_1=releases_params['longitude_1'],
-             lon_2=releases_params['longitude_2'],
-             lat_1=releases_params['latitude_1'],
-             lat_2=releases_params['latitude_2'],
-             mass=releases_params['mass'],
-             comment=releases_params['comment'],
-             minheight=user_params['minheight'],
-             maxheight=user_params['maxheight'])
+"""
 
-  write_to_file(basename + '/options/', 'RELEASES', template_header +
+  write_to_file(f"{basename}/options/", 'RELEASES', template_header +
                 release_header + release_body)
 
 user_params = get_xml_params()
+calc_id = user_params['calc_id']
+series_id = user_params['series_id']
+series_dir = '/series/' + series_id
+last_release_end_date = releases_params[-1]['end_date_time']
+parse_messages(f'Calculation {calc_id} for series {series_id} started.')
 
 # First date from user last is the last release date + 1 hour
-download_grid(user_params['start_date_time'], releases_params[-1]['end_date_time'])
+download_grid(user_params['start_date_time'], last_release_end_date)
 
 parse_command_file()
 parse_outgrid_file()
-parse_simflex_inputs()
+parse_simflex_inputs(series_id)
 
-end_date_time_str = (
-    releases_params[-1]['end_date_time'] + timedelta(hours=1)).strftime('%Y%m%d%H%M%S')
+end_date_time_str = (last_release_end_date + timedelta(hours=1)).strftime('%Y%m%d%H%M%S')
 output_filename_prefix = 'grid_time_' + end_date_time_str
 start_calc_time = datetime.now()
+
+create_folder(series_dir)
 
 for param in releases_params:
   # move output prognose to simflex folder and rename it according to the release id
   id = param['id']
-  old_output_file_path = basename + '/output/' + output_filename_prefix + '.nc'
-  new_output_file_path = simflex_dir_path + output_filename_prefix + \
-    '_' + id + '.nc'
-
-  # skip calculation if output file exist
-  if not os.path.isfile(new_output_file_path):
+  nuclide_name = param['species_name']
+  default_flexpart_file_path = f"{basename}/output/{output_filename_prefix}.nc"
+  new_flexpart_file_path = f"{series_dir}/{nuclide_name}/{output_filename_prefix}_{id}.nc"
+  create_folder(f"/data/output/{nuclide_name}")
+  create_folder(f"{series_dir}/{nuclide_name}")
+  # skip calculation if the flexpart output file exist
+  # add aditional logic to check existance of the binaray file in the series folder
+  if not os.path.isfile(new_flexpart_file_path):
     parse_releases_file(param)
-    message = 'FLEXPART running {i} of {j} releases.'.format(
-        i=id, j=len(releases_params))
-    parse_messages(message)
+    parse_messages(f'FLEXPART running {id} of {len(releases_params)} releases.')
     rc = run("time FLEXPART_MPI", shell=True)
 
-    if os.path.isfile(old_output_file_path):
-      os.rename(old_output_file_path,  new_output_file_path)
-      parse_simflex_input_params(id, new_output_file_path)
-      parse_messages(
-          "FLEXPART completed the calculation of {i} release.".format(i=id))
-      # save flexpart output after each calculations othervise it will be rewrited
+    if os.path.isfile(default_flexpart_file_path):
+      os.popen(f"cp {default_flexpart_file_path} {new_flexpart_file_path}")
+      parse_simflex_input_params(id, new_flexpart_file_path)
+      parse_messages(f"FLEXPART completed the calculation of {id} release.")
+      # save flexpart output after each calculations othervise it will be rewritten
       # os.rename(basename + '/output/',  basename + '/output_' + id)
       # create_folder('output')
     else:
-      message = "Calculation didn\'t complete successful for {0} release, check the output/input parameters.".format(
-          id)
+      message = f"Calculation didn't complete successfully for {id} release, check the output/input params."
       parse_messages(message, True)
   else:
-    parse_messages('Skip calculation, output file for {0} release exist.'.format(id))
+    parse_simflex_input_params(id, new_flexpart_file_path)
+    parse_messages(f'Skip calculation, output file for {id} release exist.')
     continue
 
-messages = 'FLEXPART finished all calculations, it took '+str(datetime.now()-start_calc_time)+".\n"
+parse_messages(f"FLEXPART finished all calculations, it took {datetime.now()-start_calc_time}.\n")
 
 start_simflex_time = datetime.now()
-messages +=  "Starting simflex calculation.\n"
+parse_messages(f"Starting simflex calculation.")
 rc = run("simflex", shell=True)
 
-messages += 'SIMFLEX finished calculation, it took '+str(datetime.now()-start_simflex_time)+".\n"
-messages += 'All calculation took ' + \
-    str(datetime.now()-start_calc_time)
+messages = f'SIMFLEX finished calculation {calc_id} for series {series_id}, it took {datetime.now()-start_simflex_time}.\n'
+messages += f'All calculation took {datetime.now()-start_calc_time}'
 parse_messages(messages)

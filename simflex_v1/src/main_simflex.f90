@@ -20,7 +20,7 @@
      syear,smon,sday,shr,sminut,loutstep,min_duration,tstart_max,&
      thresh_start,dlon,dlat,DHgt,outlon0,outlat0,&
      def_maxtsrcind,def_ndur_min,def_tstartmax,& ! - these are subroutines
-     input_dirname,output_dirname
+     input_dirname,output_dirname,series_id
 
     implicit none
     integer,parameter:: MaxIsolines=100
@@ -29,7 +29,7 @@
     real Isolines_(MaxIsolines)
     real ThreshProb_,min_duration_,tstart_max_,thresh_start_,DHgt_
     logical redirect_console
-    integer syear_,smon_,sday_,shr_,sminut_,nlon_,nlat_
+    integer syear_,smon_,sday_,shr_,sminut_,nlon_,nlat_,series_id_
     
     integer nt,i,ierr1,ierr2
     real dlon_,dlat_
@@ -38,7 +38,7 @@
     namelist /simflexinp/nhgt_,Niso_,loutstep_,&
      Isolines_,ThreshProb_,min_duration_,tstart_max_,thresh_start_,DHgt_,&
      redirect_console,syear_,smon_,sday_,shr_,sminut_,nlon_,nlat_,&
-      dlon_,dlat_,outlon_,outlat_
+      dlon_,dlat_,outlon_,outlat_,series_id_
     
     write(6,*) 'Starting SIMFLEX'
     write(6,*)' '
@@ -70,7 +70,8 @@
      write(6,*)'outlon_=',outlon_,'outlat_=',outlat_
      write(6,*)'nlon_=',nlon_,'nlat_=',nlat_
      write(6,*)'DHgt_=',DHgt_
-     
+     write(6,*)'series_id_=',series_id_
+
      call Check_Iso(Isolines_,Niso_)
 
 !Pass inputs to module     
@@ -92,7 +93,7 @@
      nlon=nlon_
      nlat=nlat_
      DHgt=DHgt_
-     
+     series_id=series_id_
     ! Body of simflex
     if(redirect_console)then
        open(6, FILE = output_dirname // 'console.dat')

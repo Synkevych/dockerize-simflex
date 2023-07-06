@@ -1,8 +1,8 @@
 !this is stub read subroutine(!)
       subroutine readlonlat
       use SIMFLEX,only:lon,lat,nlon,nlat,dlon,dlat,outlon0,outlat0,
-     &                 id_obs,srsfiles,locobsid,full_output_path,
-     &                 output_dirname
+     &                 id_obs,srsfiles,locobsid,calc_output_path,
+     &                 output_dirname,nuclide_name
       implicit none
       include 'netcdf.inc'
       
@@ -10,7 +10,6 @@
       real outlon_,outlat_
       integer state,ncid,J,x_id,y_id,nstr,cvar_id
       character*(nf_max_name) recname
-      character(len=100) :: nuclide_name ! Attribute name
 
        J=locobsid(id_obs(1))
  
@@ -77,7 +76,8 @@
 
        state=nf_get_att_text(ncid,cvar_id,'long_name',nuclide_name)
        if(state.ne.nf_noerr) call handle_err(state)
-       full_output_path = output_dirname//trim(nuclide_name)//"/"
+       nuclide_name = trim(nuclide_name)
+       calc_output_path = output_dirname//trim(nuclide_name)//"/"
 
        state = nf_close(ncid)
        if(state.ne.nf_noerr) call handle_err(state)
