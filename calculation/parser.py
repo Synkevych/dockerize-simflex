@@ -322,3 +322,5 @@ if __name__ == '__main__':
 
   run_simflex_calculation(calc_id, series_id)
   parse_messages(f'All calculation took {datetime.now()-start_calc_time}')
+  # create /data/done.txt' file to indicate that calculation is finished
+  open('/data/done.txt', 'a').close()
