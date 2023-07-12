@@ -12,7 +12,7 @@ HHMMSS = ['030000', '060000', '090000', '120000',
           '150000', '180000', '210000', '000000']
 FILE_HOURS = ['0000', '0000', '0600', '0600', '1200', '1200', '1800', '1800']
 FILE_SUFFIX = ['003', '006']
-DATA_FOLDER = '/series/grid_data/'
+DATA_FOLDER = '/series/grid_data/' # should be the same in pathnames file
 start_loading_time = datetime.now()
 available_template_header = """XXXXXX EMPTY LINES XXXXXXXXX
 XXXXXX EMPTY LINES XXXXXXXX
