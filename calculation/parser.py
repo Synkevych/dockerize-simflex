@@ -68,7 +68,7 @@ def parse_measurements(file=measurements_file_path):
         measurement_id = row[2]
         start_date_time = parse_datetime(row[10], row[11])
         end_date_time = parse_datetime(row[12], row[13])
-        species_mass = float(row[14])
+        species_mass = "{:e}".format(float(row[14]))
 
         # Adjust latitude and longitude values
         latitude_1 = float(row[6]) - 0.001
@@ -97,7 +97,7 @@ def parse_measurements(file=measurements_file_path):
             'species_name': row[9],
             'start_date_time': start_date_time,
             'end_date_time': end_date_time,
-            'mass': "{:e}".formats(species_mass),
+            'mass': species_mass,
             'comment': "RELEASE " + measurement_id
         })
     return simflex_params, releases_params

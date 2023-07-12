@@ -23,7 +23,8 @@ def parse_available_file(date=None, file_name=None):
   available_template_body = f"""{date.strftime('%Y%m%d')} {date.strftime('%H%M%S')}      {file_name}      ON DISC\n"""
   write_to_file('','AVAILABLE', available_template_body, 'a')
 
-def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="analysis"):  # '0.5' or 1.0
+
+def download_prognose(date_start=None, date_end=None, grid_degree='1.0', grid_type="analysis"):  # '0.5' or 1.0
   parse_messages('Started loading grid data.')
 
   if type(date_start) is not datetime:
