@@ -68,7 +68,7 @@ def parse_measurements(file=measurements_file_path):
         measurement_id = row[2]
         start_date_time = parse_datetime(row[10], row[11])
         end_date_time = parse_datetime(row[12], row[13])
-        species_mass = "{:e}".format(float(row[14]))
+        species_mass = float(row[14])
 
         # Adjust latitude and longitude values
         latitude_1 = float(row[6]) - 0.001
@@ -97,7 +97,7 @@ def parse_measurements(file=measurements_file_path):
             'species_name': row[9],
             'start_date_time': start_date_time,
             'end_date_time': end_date_time,
-            'mass': species_mass,
+            'mass': "{:e}".format(species_mass),
             'comment': "RELEASE " + measurement_id
         })
     return simflex_params, releases_params
@@ -270,7 +270,7 @@ def process_releases(releases_params, end_date, series_id):
     if not os.path.isfile(new_flexpart_file_path):
       parse_releases_file(param)
       parse_messages(
-          f'FLEXPART running {id} of {len(releases_params)} releases.')
+          f'FLEXPART running calculation for measurement id {id} of a total of {len(releases_params)}.')
       rc = run("FLEXPART_MPI", shell=True)
 
       if os.path.isfile(default_flexpart_file_path):
@@ -278,7 +278,7 @@ def process_releases(releases_params, end_date, series_id):
             f"cp {default_flexpart_file_path} {new_flexpart_file_path}")
         parse_table_srs_file(id, new_flexpart_file_path)
         parse_messages(
-            f"FLEXPART completed the calculation of {id} release.")
+            f"FLEXPART completed calculation for measurement id {id}.")
       else:
         message = f"Calculation didn't complete successfully for {id} release, check the output/input params."
         parse_messages(message, True)
