@@ -14,8 +14,7 @@ RUN apt-get update && apt-get install -y \
   openssh-server software-properties-common build-essential \
   make gcc g++ zlib1g-dev python3 python3-pip \
   gfortran autoconf libtool automake bison cmake \
-  libeccodes0 libeccodes-dev libeccodes-tools \
-  libnetcdff-dev time vim
+  libeccodes0 libeccodes-dev libnetcdff-dev
 
 RUN add-apt-repository 'deb http://security.ubuntu.com/ubuntu xenial-security main'\
   && apt-get update \

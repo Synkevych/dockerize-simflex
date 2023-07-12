@@ -193,6 +193,14 @@
 
        write(6,*)' '
 
+      contains
+
+        function int2str(n) result(str)
+          implicit none
+          integer, intent(in) :: n
+          character(len=10) :: str
+          write(str, '(I10)') n
+        end function int2str
 
        end subroutine read_tintegr_srs
 

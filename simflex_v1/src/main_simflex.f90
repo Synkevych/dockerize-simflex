@@ -143,10 +143,6 @@
     
     call save_times_mass
 
-! create file done.txt after successfull calculation
-    open(11,FILE='/data/done.txt')
-    close(11)
-
     if(redirect_console)then
        close(6)
     endif

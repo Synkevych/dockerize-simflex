@@ -79,7 +79,6 @@
        close(1111)
 
        open(1112, FILE=calc_output_path // 'Table.txt')
-       write(1112,'(A)') '% of_maxcor Probability'
        do k=1,Niso
         write(1112,'(F4.2, F5.2)') Isolines(k), Prob_iso(k)
        enddo

@@ -20,20 +20,16 @@ YYYYMMDD HHMMSS      name of the file(up to 80 characters)
 """
 
 def parse_available_file(date=None, file_name=None):
-  available_template_body = """{yyyymmdd} {hhmmss}      {file_name}      ON DISC
-""".format(yyyymmdd=date.strftime('%Y%m%d'),
-          hhmmss=date.strftime('%H%M%S'),
-          file_name=file_name)
+  available_template_body = f"""{date.strftime('%Y%m%d')} {date.strftime('%H%M%S')}      {file_name}      ON DISC\n"""
   write_to_file('','AVAILABLE', available_template_body, 'a')
 
-# dry the function and make ability to provide different degree or type if fine is not found
 def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="analysis"):  # '0.5' or 1.0
   parse_messages('Started loading grid data.')
 
   if type(date_start) is not datetime:
     parse_messages("Start Date is incorrect",True)
   elif type(date_end) is not datetime:
-   parse_messages("End Date is incorrect",True)
+    parse_messages("End Date is incorrect",True)
   else:
     # dates should ends with hours that divides to 3
     start_date = date_start - timedelta(hours = date_start.hour % 3)
@@ -55,8 +51,7 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
     NCEI_URL = "https://www.ncei.noaa.gov/data/global-forecast-system/access/"
     FILE_TYPE = ".grb2"
     PREFIX_BY_DEGREE = {'0.5': '4', '1.0': '3'}
-    GRID = "grid-00" + \
-        PREFIX_BY_DEGREE[grid_degree] + '-' + grid_degree + "-degree/"
+    GRID = f"grid-00{PREFIX_BY_DEGREE[grid_degree]}-{grid_degree}-degree/"
 
     if start_date < datetime(2005, 1, 2) or start_date > (datetime.now() - timedelta(days=2)):
       parse_messages("Error, grid data is not exist for provided datetime.", True)
@@ -74,7 +69,7 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
       if start_date < datetime(2017, 4, 5):
         FILE_TYPE = ".grb"
     else:
-      FILE_PREFIX = "gfs_" + PREFIX_BY_DEGREE[grid_degree] + "_"
+      FILE_PREFIX = f"gfs_{PREFIX_BY_DEGREE[grid_degree]}_"
       DOMAIN = NCEI_URL + GRID + grid_type + '/'
 
     while(end_forecast_date < end_date):
@@ -92,37 +87,35 @@ def download_grid(date_start=None, date_end=None, grid_degree='1.0', grid_type="
       path_to_file = os.path.join(DATA_FOLDER, file_name)
 
       URL = DOMAIN + start_forecast_date.strftime('%Y%m/%Y%m%d/') + file_name
-      parse_messages('File URL: ' + URL)
+      parse_messages(f"File URL: {URL}")
       response = None
       try:
         response = urlopen(URL)
       except Exception as ex:
-        parse_messages('Error, while loading file ' + file_name + ' ' + str(ex))
+        parse_messages(f"Error, while loading file {file_name} {ex}")
       else:
         if os.path.isfile(path_to_file) and os.stat(path_to_file).st_size == response.length:
-          parse_messages("File "+file_name+" " +str(int(os.stat(path_to_file).st_size/1024/1024))+"M exist, skip loading.\n")
+          parse_messages(f"File {file_name} {int(os.stat(path_to_file).st_size/1024/1024)}M exist, skip loading.\n")
           parse_available_file(end_forecast_date, file_name)
           end_forecast_date = start_forecast_date = end_forecast_date + \
               timedelta(hours=3)
           continue
         else:
           if response.status == 200 and response.length > 1024:
-              parse_messages('Loading file ' + file_name + ' with size ' + str(int(
-                  response.length/1024/1024))+'M from remote host.')
+              parse_messages(f"Loading file {file_name} with size {int(response.length/1024/1024)}M from remote host.")
               outfile = open(path_to_file, 'wb')
               try:
                   shutil.copyfileobj(response, outfile)
                   parse_available_file(end_forecast_date, file_name)
-                  parse_messages('File ' + file_name + ' uploaded successfully.\n')
+                  parse_messages(f"File {file_name} uploaded successfully.\n")
               finally:
                   outfile.close()
           else:
-             parse_messages('Error, while loading file ' + file_name + ' file name or url is not correct.\n')
+             parse_messages(f"Error, while loading file {file_name} file name or url is not correct.\n")
       finally:
         if response is not None:
             response.close()
       end_forecast_date = start_forecast_date = end_forecast_date + \
           timedelta(hours=3)
 
-  parse_messages('Finished loading grid data and filling AVAILABLE file, it took ' +
-             str(datetime.now()-start_loading_time)+'.\n')
+  parse_messages(f"Finished loading grid data and filling AVAILABLE file, it took {datetime.now()-start_loading_time}.\n")
