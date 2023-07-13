@@ -33,6 +33,9 @@ def get_xml_params(file=options_file_path):
   end_date_time = datetime.strptime(end_date_time_str, '%Y-%m-%d %H:%M:%S')
   nx = (xml_root.find('nx').text).split('.')[0]
   ny = (xml_root.find('ny').text).split('.')[0]
+  # test if minheight is not 0 then use 1 as default
+  minheight = xml_root.find('minheight').text if xml_root.find(
+      'minheight').text != '0' else '1'
 
   return {
       'start_date_time': start_date_time,
@@ -44,7 +47,7 @@ def get_xml_params(file=options_file_path):
       'dx_out': xml_root.find('dlat').text,
       'dy_out': xml_root.find('dlon').text,
       'minheight': xml_root.find('minheight').text,
-      'maxheight': xml_root.find('maxheight').text,
+      'maxheight': minheight,
       'loutstep': xml_root.find('loutstep').text,
       'series_id': xml_root.find('id_series').text,
       'calc_id': xml_root.find('id_calc').text,
@@ -191,7 +194,7 @@ shr_={date_time:%H},
 sminut_={date_time:%M},
 loutstep_={user_params['loutstep']}, ! 3600 default
 tstart_max_=-9999.0,
-thresh_start_={user_params['thresh_startb']},
+thresh_start_={user_params['thresh_startb']}, ! 1.0 default
 min_duration_={user_params['loutstep']},
 dlon_={user_params['dy_out']},
 dlat_={user_params['dx_out']},
