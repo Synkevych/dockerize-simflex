@@ -33,8 +33,7 @@ def get_xml_params(file=options_file_path):
   end_date_time = datetime.strptime(end_date_time_str, '%Y-%m-%d %H:%M:%S')
   nx = (xml_root.find('nx').text).split('.')[0]
   ny = (xml_root.find('ny').text).split('.')[0]
-  # test if minheight is not 0 then use 1 as default
-  minheight = xml_root.find('minheight').text if xml_root.find(
+  min_height = xml_root.find('minheight').text if xml_root.find(
       'minheight').text != '0' else '1'
 
   return {
@@ -46,8 +45,8 @@ def get_xml_params(file=options_file_path):
       'num_y_grid': ny,
       'dx_out': xml_root.find('dlat').text,
       'dy_out': xml_root.find('dlon').text,
-      'minheight': xml_root.find('minheight').text,
-      'maxheight': minheight,
+      'minheight': min_height,
+      'maxheight': xml_root.find('maxheight').text,
       'loutstep': xml_root.find('loutstep').text,
       'series_id': xml_root.find('id_series').text,
       'calc_id': xml_root.find('id_calc').text,
