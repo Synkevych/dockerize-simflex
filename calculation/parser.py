@@ -272,7 +272,7 @@ def process_releases(releases_params, end_date, series_id):
       parse_releases_file(param)
       parse_messages(
           f'FLEXPART running calculation for measurement id {id} of a total of {len(releases_params)}.')
-      rc = run("FLEXPART_MPI", shell=True)
+      rc = run("FLEXPART_MPI >> /data/calculations_server.log", shell=True)
 
       if os.path.isfile(default_flexpart_file_path):
         os.popen(
