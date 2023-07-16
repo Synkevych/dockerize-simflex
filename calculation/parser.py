@@ -271,18 +271,22 @@ def process_releases(releases_params, end_date, series_id):
     if not os.path.isfile(new_flexpart_file_path):
       parse_releases_file(param)
       parse_messages(
-          f'FLEXPART running calculation for measurement id {id} of a total of {len(releases_params)}.')
-      rc = run("FLEXPART_MPI >> /data/calculations_server.log", shell=True)
-
-      if os.path.isfile(default_flexpart_file_path):
-        os.popen(
-            f"cp {default_flexpart_file_path} {new_flexpart_file_path}")
-        parse_table_srs_file(id, new_flexpart_file_path)
-        parse_messages(
-            f"FLEXPART completed calculation for measurement id {id}.")
+          f'FLEXPART running calculation for measurement id {id} (total {len(releases_params)}).')
+      rc = subprocess.check_output(
+          "FLEXPART_MPI", shell=True)
+      parse_messages(rc.decode("utf-8"))
+      if b'CONGRATULATIONS: YOU HAVE SUCCESSFULLY COMPLETED A FLEXPART MODEL RUN!' in rc:
+        if os.path.isfile(default_flexpart_file_path):
+          os.popen(
+              f"cp {default_flexpart_file_path} {new_flexpart_file_path}")
+          parse_table_srs_file(id, new_flexpart_file_path)
+          parse_messages(
+              f"FLEXPART completed calculation for measurement id {id}.")
+        else:
+          message = f"Calculation didn't complete successfully for {id} release, check the output/input params."
+          parse_messages(message, True)
       else:
-        message = f"Calculation didn't complete successfully for {id} release, check the output/input params."
-        parse_messages(message, True)
+        parse_messages("Something went wrong when running FLEXPART.", True)
     else:
         parse_table_srs_file(id, new_flexpart_file_path)
         parse_messages(
@@ -306,8 +310,7 @@ if __name__ == '__main__':
   parse_messages(f'Calculation {calc_id} for series {series_id} started.')
   start_calc_time = datetime.now()
 
-  # First date from user last is the last release date + 1 hour
-  ### ToDo: do not download prognose if calculation is already done for this series
+  # First date from user last is the last release date + 3 hours
   download_prognose(user_params['start_date_time'], last_release_end_date)
 
   parse_command_file(user_params)

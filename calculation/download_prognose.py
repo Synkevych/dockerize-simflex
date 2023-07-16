@@ -34,15 +34,17 @@ def download_prognose(date_start=None, date_end=None, grid_degree='1.0', grid_ty
   else:
     # dates should ends with hours that divides to 3
     start_date = date_start - timedelta(hours = date_start.hour % 3)
-    end_date = date_end + timedelta(hours=3)
+    ### if end_date has minutes or seconds, add one hour
+    if date_end.minute > 0 or date_end.second > 0:
+      end_date = date_end + timedelta(hours=4)
+    else:
+      end_date = date_end + timedelta(hours=3)
 
     # end date must be divisible by three
     if end_date.hour % 3 == 1:
-      end_date = date_end + timedelta(hours=2)
+      end_date = end_date + timedelta(hours=2)
     elif end_date.hour% 3 == 2:
-      end_date = date_end + timedelta(hours=1)
-    else:
-      end_date = date_end + timedelta(hours=3)
+      end_date = end_date + timedelta(hours=1)
 
     create_folder(DATA_FOLDER)
     write_to_file('', 'AVAILABLE', available_template_header)
