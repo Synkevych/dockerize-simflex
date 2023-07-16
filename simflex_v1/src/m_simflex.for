@@ -16,8 +16,9 @@
 
       character(17),parameter::normcor_debug='normcor_debug.dat'
       character(20),parameter::timesmass_debug='times_mass_debug.dat'
-      character (len=:), allocatable :: full_output_path  ! Outpuf folder name
-      
+      character(len=:), allocatable :: calc_output_path ! Calculation outpuf folder path
+      character(len=100) :: nuclide_name ! Attribute name
+
 !USER INPUTS      
 !Date-time parameters of the simulation run
       integer syear,smon,sday,shr,sminut ! start year,month,day,hour (minutes/seconds are zero)  
@@ -31,7 +32,8 @@
 corner of the grid
          integer nlon,nlat,nhgt ! sizes of flexpart grid; to be consistent with respective fields in flexpart files
          real DHgt ! depth of FLEXPART output vertical layer; to be consistent with respective values in flexpart files
-         
+         integer series_id ! Series id of used to move binary files to the right folder
+
 
 ! Measurements section:
       integer Nobs ! number of observations used in source inversion
@@ -226,7 +228,7 @@ corner of the grid
         allocate(cell_ilon(nlon*nlat))
         allocate(cell_jlat(nlon*nlat))
 
-        open(1024, FILE = full_output_path // gridname)
+        open(1024, FILE = calc_output_path // gridname)
         k=0
         do j=1,nlat
            do i=1,nlon

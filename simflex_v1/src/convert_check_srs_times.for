@@ -19,7 +19,7 @@
        integer J,nstr,k,i
        real tsecsince
        
-       double precision JStart_datetime,tmp_start,tmp_end,tmpt,tflexmax,
+       double precision JStart_datetime,tmpt,tflexmax,
      &                   tobsend
       double precision,parameter::thresch=-1.E-4
       
