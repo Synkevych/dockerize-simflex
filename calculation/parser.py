@@ -3,7 +3,7 @@
 import os
 import csv
 import xml.etree.ElementTree as ET
-from subprocess import run
+from subprocess import check_output, run
 from download_prognose import download_prognose
 from datetime import datetime, timedelta
 from helper import parse_messages, write_to_file, create_folder
@@ -272,8 +272,7 @@ def process_releases(releases_params, end_date, series_id):
       parse_releases_file(param)
       parse_messages(
           f'FLEXPART running calculation for measurement id {id} (total {len(releases_params)}).')
-      rc = subprocess.check_output(
-          "FLEXPART_MPI", shell=True)
+      rc = check_output("FLEXPART_MPI", shell=True)
       parse_messages(rc.decode("utf-8"))
       if b'CONGRATULATIONS: YOU HAVE SUCCESSFULLY COMPLETED A FLEXPART MODEL RUN!' in rc:
         if os.path.isfile(default_flexpart_file_path):
