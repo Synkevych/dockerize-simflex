@@ -282,10 +282,11 @@ def process_releases(releases_params, end_date, series_id):
           parse_messages(
               f"FLEXPART completed calculation for measurement id {id}.")
         else:
-          message = f"Calculation didn't complete successfully for {id} release, check the output/input params."
+          message = f"flexpart_error: Calculation didn't complete successfully for {id} release, check the output/input params."
           parse_messages(message, True)
       else:
-        parse_messages("Something went wrong when running FLEXPART.", True)
+        parse_messages(
+            "flexpart_error: Something went wrong when running FLEXPART.", True)
     else:
         parse_table_srs_file(id, new_flexpart_file_path)
         parse_messages(
