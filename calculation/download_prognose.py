@@ -8,6 +8,8 @@ from helper import parse_messages, write_to_file, create_folder
 
 # 2 month equal to 44 Gb / calc speed and time needed to downloads this data
 
+# URL example: https://www.ncei.noaa.gov/data/global-forecast-system/access/grid-003-1.0-degree/analysis/202104/20210417/gfs_3_20210417_1800_006.grb2
+
 HHMMSS = ['030000', '060000', '090000', '120000',
           '150000', '180000', '210000', '000000']
 FILE_HOURS = ['0000', '0000', '0600', '0600', '1200', '1200', '1800', '1800']
@@ -28,9 +30,9 @@ def download_prognose(date_start=None, date_end=None, grid_degree='1.0', grid_ty
   parse_messages('Started loading grid data.')
 
   if type(date_start) is not datetime:
-    parse_messages("Start Date is incorrect",True)
+    parse_messages("grib_error: Start Date is incorrect", True)
   elif type(date_end) is not datetime:
-    parse_messages("End Date is incorrect",True)
+    parse_messages("grib_error: End Date is incorrect", True)
   else:
     # dates should ends with hours that divides to 3
     start_date = date_start - timedelta(hours = date_start.hour % 3)
@@ -57,7 +59,8 @@ def download_prognose(date_start=None, date_end=None, grid_degree='1.0', grid_ty
     GRID = f"grid-00{PREFIX_BY_DEGREE[grid_degree]}-{grid_degree}-degree/"
 
     if start_date < datetime(2005, 1, 2) or start_date > (datetime.now() - timedelta(days=2)):
-      parse_messages("Error, grid data is not exist for provided datetime.", True)
+      parse_messages(
+          "grib_error: Error, grid data is not exist for provided datetime.", True)
       return
     elif start_date < datetime.now() - timedelta(days=1013):
       # historical available from 2019/08/01 - 2020/05/01-15
@@ -114,7 +117,8 @@ def download_prognose(date_start=None, date_end=None, grid_degree='1.0', grid_ty
               finally:
                   outfile.close()
           else:
-             parse_messages(f"Error, while loading file {file_name} file name or url is not correct.\n")
+             parse_messages(
+                 f"grib_error: Error, while loading file {file_name} file name or url is not correct.\n", True)
       finally:
         if response is not None:
             response.close()
