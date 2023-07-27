@@ -17,6 +17,8 @@ def parse_messages(msg, exit=False):
     # file = open("/data/calculations_server.error", "a")
     # file.write(msg)
     # file.close()
+    # create a file to indicate that the calculation is done
+    open('/data/done.txt', 'a').close()
 
     sys.exit(msg)
   else:
