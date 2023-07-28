@@ -45,8 +45,8 @@ def parse_xml_to_object(file=OPTIONS_FILE):
       'out_latitude': xml_root.find('se_lat').text,
       'num_x_grid': nx,
       'num_y_grid': ny,
-      'dx_out': xml_root.find('dlon').text,
-      'dy_out': xml_root.find('dlat').text,
+      'dlon': xml_root.find('dlon').text,
+      'dlat': xml_root.find('dlat').text,
       'minheight': min_height,
       'maxheight': xml_root.find('maxheight').text,
       'loutstep': xml_root.find('loutstep').text,
@@ -166,8 +166,8 @@ def parse_outgrid_file(user_params):
  OUTLAT0=     {user_params['out_latitude']},
  NUMXGRID=      {user_params['num_x_grid']},
  NUMYGRID=      {user_params['num_y_grid']},
- DXOUT=        {user_params['dx_out']},
- DYOUT=        {user_params['dy_out']},
+ DXOUT=        {user_params['dlon']},
+ DYOUT=        {user_params['dlat']},
  OUTHEIGHTS=   {user_params['maxheight']},
  /
 """
@@ -212,8 +212,8 @@ loutstep_={user_params['loutstep']}, ! 3600 default
 tstart_max_=-9999.0,
 thresh_start_={user_params['thresh_startb']}, ! 1.0 default
 min_duration_={user_params['loutstep']},
-dlon_={user_params['dy_out']},
-dlat_={user_params['dx_out']},
+dlon_={user_params['dlon']},
+dlat_={user_params['dlat']},
 outlon_={user_params['out_longitude']}, ! 0. default
 outlat_={user_params['out_latitude']},
 nlon_={user_params['num_x_grid']},
