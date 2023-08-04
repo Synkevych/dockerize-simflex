@@ -4,13 +4,13 @@ import os
 from subprocess import run
 import logging
 import sys
-from settings import LOGS_PATH
+from settings import LOGS_PATH, COMPLETE_CALCULATION_FILE
 
 logging.basicConfig(filename=LOGS_PATH, level=logging.INFO,
                     format="%(asctime)s %(message)s")
 
 def parse_messages(msg, exit=False):
-  rc = run("""echo \"{message}\" """.format(message=msg), shell=True)
+  run(f"""echo \"{msg}\" """, shell=True)
 
   if exit:
     logging.error(msg)
@@ -20,20 +20,21 @@ def parse_messages(msg, exit=False):
     # file.write(msg)
     # file.close()
     # create a file to indicate that the calculation is done
-    open('/data/done.txt', 'a').close()
+    open(COMPLETE_CALCULATION_FILE, 'a').close()
 
     sys.exit(msg)
   else:
     logging.info(msg)
 
 
-def write_to_file(full_path, file_name, contents, mode='w'):
+def write_to_file(path, file_name, contents, mode='w'):
+  file_path = os.path.join(path, file_name)
 
-  file = open(full_path + file_name, mode)
+  file = open(file_path, mode)
   file.write(contents)
   file.close()
   logging.info(f'Parsing {file_name} file compleated.')
 
 
-def create_folder(directory=None):
-  os.makedirs(directory, exist_ok=True)
+def create_folder(dir_name=None):
+  os.makedirs(dir_name, exist_ok=True)

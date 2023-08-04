@@ -137,7 +137,8 @@ Open Multi-Processing ([OpenMP](http://www.openmp.org/))
 - [ ] Use command `docker run -d -it --entrypoint="/bin/bash" -v "$PWD":/data/ -v /home/flexpart/series/:/series/ simflex:final` to connect to the container without calculations(for example test purpose)
 - [ ] And then use `docker exec -it simflex /bin/bash` to connect to the running container
 
-Flexpart - входние папки 
+Command `docker inspect -f '{{.State.ExitCode}}' container_name`.
+If the container after calculation has *ExitCode 0* then everything is ok, if *ExitCode 1* then something went wrong while calculation, container should be restarted, if *ExitCode 2* then something went wrong with user files and user should be informed about it.
 
 ## Resources
 
