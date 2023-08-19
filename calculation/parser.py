@@ -4,47 +4,49 @@ import os
 import csv
 import xml.etree.ElementTree as ET
 from subprocess import check_output, run
-from download_prognose import download_prognose
+# from download_prognose import download_prognose
+from dw_gb import download_data
 from datetime import datetime, timedelta
 from helper import parse_messages, write_to_file, create_folder
+from settings import *
 
 basename = os.getcwd()
-simflex_dir_path = basename + '/simflex_input/'
-template_header = """***************************************************************************************************************
-*                                                                                                             *
-*   Input file for the Lagrangian particle dispersion model FLEXPART                                           *
-*                        Please select your options                                                           *
-*                                                                                                             *
-***************************************************************************************************************
-"""
-options_file_path = '/data/input/options.xml'
-measurements_file_path = '/data/input/measurements.txt'
-
+simflex_dir_path = basename + SIMFLEX_INPUT_DIRNAME
 
 def parse_datetime(date_string, time_string):
-    return datetime.strptime(date_string + time_string, '%Y-%m-%d%H:%M:%S')
+    try:
+        return datetime.strptime(date_string + time_string, '%Y-%m-%d%H:%M:%S')
+    except ValueError:
+      parse_messages(
+        f"grib_error: Date {date_string}  or time {time_string} is incorrect", error=True)
 
-def get_xml_params(file=options_file_path):
+
+def parse_xml_to_object(file=OPTIONS_FILE):
+  # check if file exists
+  if  not os.path.isfile(file):
+    parse_messages(
+      f"grib_error: File {file} doesn't exist", error=True)
   xml_tree = ET.parse(file)
   xml_root = xml_tree.getroot()
   start_date_time_str = xml_root.find('imin').text
-  end_date_time_str = xml_root.find('imax').text
   start_date_time = datetime.strptime(start_date_time_str, '%Y-%m-%d %H:%M:%S')
-  end_date_time = datetime.strptime(end_date_time_str, '%Y-%m-%d %H:%M:%S')
-  nx = (xml_root.find('nx').text).split('.')[0]
-  ny = (xml_root.find('ny').text).split('.')[0]
+  # TODO: check if end date is needed
+  # end_date_time_str = xml_root.find('imax').text
+  # end_date_time = datetime.strptime(end_date_time_str, '%Y-%m-%d %H:%M:%S')
+  nx = (xml_root.find('nx').text)
+  ny = (xml_root.find('ny').text)
   min_height = xml_root.find('minheight').text if xml_root.find(
       'minheight').text != '0' else '1'
 
   return {
       'start_date_time': start_date_time,
-      'end_date_time': end_date_time,
+      # 'end_date_time': end_date_time,
       'out_longitude': xml_root.find('se_lon').text,
       'out_latitude': xml_root.find('se_lat').text,
       'num_x_grid': nx,
       'num_y_grid': ny,
-      'dx_out': xml_root.find('dlat').text,
-      'dy_out': xml_root.find('dlon').text,
+      'dlon': xml_root.find('dlon').text,
+      'dlat': xml_root.find('dlat').text,
       'minheight': min_height,
       'maxheight': xml_root.find('maxheight').text,
       'loutstep': xml_root.find('loutstep').text,
@@ -54,7 +56,11 @@ def get_xml_params(file=options_file_path):
   }
 
 
-def parse_measurements(file=measurements_file_path):
+def parse_csv_to_object(file=MEASUREMENTS_FILE):
+  # check if file exists
+  if not os.path.isfile(file):
+    parse_messages(
+      f"grib_error: File {file} doesn't exist", error=True)
   with open(file, newline='') as csvfile:
     csv_reader = csv.reader(csvfile, delimiter=';')
     csv_header = next(csv_reader)
@@ -138,7 +144,8 @@ def parse_command_file(user_params):
  OHFIELDS_PATH= "../../flexin/", ! Default path for OH file
  /
 """
-  write_to_file(basename + '/options/', 'COMMAND', template_header + command_body)
+  write_to_file(basename + '/options/', 'COMMAND',
+                FLEXPART_TEMPLATE_HEADER + command_body)
 
 def parse_outgrid_file(user_params):
   outgrid_template = f"""!*******************************************************************************
@@ -159,13 +166,20 @@ def parse_outgrid_file(user_params):
  OUTLAT0=     {user_params['out_latitude']},
  NUMXGRID=      {user_params['num_x_grid']},
  NUMYGRID=      {user_params['num_y_grid']},
- DXOUT=        {user_params['dx_out']},
- DYOUT=        {user_params['dy_out']},
+ DXOUT=        {user_params['dlon']},
+ DYOUT=        {user_params['dlat']},
  OUTHEIGHTS=   {user_params['maxheight']},
  /
 """
   write_to_file(basename + '/options/', 'OUTGRID', outgrid_template)
 
+def parse_pathnames_file():
+  file_content = f"""./options/
+./output/
+{GRIB2_FILES_PATH}
+./AVAILABLE
+"""
+  write_to_file(basename + '/', 'pathnames', file_content)
 
 def parse_table_srs_file(id, file_path):
   filename = 'table_srs_paths.txt'
@@ -178,8 +192,11 @@ def parse_table_srs_file(id, file_path):
     write_to_file(simflex_dir_path, filename, file_content, 'a')
 
 
-def parse_simflex_inputs(series_id, simflex_params, user_params):
+def parse_simflex_inputs(simflex_params, user_params):
+  series_id = user_params['series_id']
   date_time = user_params['start_date_time']
+
+  create_folder(simflex_dir_path)
 
   simflexinp_template = f"""$simflexinp
 redirect_console=.true.,
@@ -195,8 +212,8 @@ loutstep_={user_params['loutstep']}, ! 3600 default
 tstart_max_=-9999.0,
 thresh_start_={user_params['thresh_startb']}, ! 1.0 default
 min_duration_={user_params['loutstep']},
-dlon_={user_params['dy_out']},
-dlat_={user_params['dx_out']},
+dlon_={user_params['dlon']},
+dlat_={user_params['dlat']},
 outlon_={user_params['out_longitude']}, ! 0. default
 outlat_={user_params['out_latitude']},
 nlon_={user_params['num_x_grid']},
@@ -245,19 +262,27 @@ def parse_releases_file(releases_params):
  /
 """
 
-  write_to_file(f"{basename}/options/", 'RELEASES', template_header +
+  write_to_file(f"{basename}/options/", 'RELEASES', FLEXPART_TEMPLATE_HEADER +
                 release_header + release_body)
 
 
-def process_releases(releases_params, end_date, series_id):
-  series_dirpath = f"/series/{series_id}"
-  end_date_time_str = (end_date + timedelta(hours=1)).strftime('%Y%m%d%H%M%S')
+def process_releases(releases_params, user_params, start_calc_time):
+  series_dirpath = f"/series/{user_params['series_id']}"
+  end_release_date = releases_params[-1]['end_date_time'] + timedelta(hours=1)
+  end_date_time_str = end_release_date.strftime('%Y%m%d%H%M%S')
   output_filename_prefix = f"grid_time_{end_date_time_str}"
 
   # Create output folder for FLEXPART calculation
   create_folder('output')
   # Create output folder for series
   create_folder(series_dirpath)
+
+  parse_command_file(user_params)
+  parse_outgrid_file(user_params)
+  parse_pathnames_file()
+
+  # First date from user last is the last release date + 3 hours
+  download_data(user_params['start_date_time'], end_release_date)
 
   for param in releases_params:
     id = param['id']
@@ -274,6 +299,7 @@ def process_releases(releases_params, end_date, series_id):
           f'FLEXPART running calculation for measurement id {id} (total {len(releases_params)}).')
       rc = check_output("FLEXPART_MPI", shell=True)
       parse_messages(rc.decode("utf-8"))
+      # Check if FLEXPART calculation completed successfully
       if b'CONGRATULATIONS: YOU HAVE SUCCESSFULLY COMPLETED A FLEXPART MODEL RUN!' in rc:
         if os.path.isfile(default_flexpart_file_path):
           os.popen(
@@ -282,8 +308,8 @@ def process_releases(releases_params, end_date, series_id):
           parse_messages(
               f"FLEXPART completed calculation for measurement id {id}.")
         else:
-          message = f"flexpart_error: Calculation didn't complete successfully for {id} release, check the output/input params."
-          parse_messages(message, True)
+          parse_messages(
+            f"flexpart_error: Calculation didn't complete successfully for {id} release, check the output/input params.", True)
       else:
         parse_messages(
             "flexpart_error: Something went wrong when running FLEXPART.", True)
@@ -292,6 +318,8 @@ def process_releases(releases_params, end_date, series_id):
         parse_messages(
             f'Skip calculation, output file for {id} release exist.')
 
+  parse_messages(
+      f"FLEXPART finished all calculations, it took {datetime.now()-start_calc_time}.\n")
 
 def run_simflex_calculation(calc_id, series_id):
     start_simflex_time = datetime.now()
@@ -300,31 +328,26 @@ def run_simflex_calculation(calc_id, series_id):
     parse_messages(
         f"SIMFLEX finished calculation {calc_id} for series {series_id}, it took {datetime.now()-start_simflex_time}.\n")
 
-# Main function
-if __name__ == '__main__':
-  user_params = get_xml_params()
-  simflex_params, releases_params = parse_measurements()
-  calc_id = user_params['calc_id']
-  series_id = user_params['series_id']
-  last_release_end_date = releases_params[-1]['end_date_time']
-  parse_messages(f'Calculation {calc_id} for series {series_id} started.')
-  start_calc_time = datetime.now()
 
-  # First date from user last is the last release date + 3 hours
-  download_prognose(user_params['start_date_time'], last_release_end_date)
-
-  parse_command_file(user_params)
-  parse_outgrid_file(user_params)
-
-  create_folder(simflex_dir_path)
-  parse_simflex_inputs(series_id, simflex_params, user_params)
-
-  process_releases(releases_params,
-                   last_release_end_date, series_id)
-  parse_messages(
-      f"FLEXPART finished all calculations, it took {datetime.now()-start_calc_time}.\n")
-
-  run_simflex_calculation(calc_id, series_id)
+def finish_calculation(start_calc_time):
   parse_messages(f'All calculation took {datetime.now()-start_calc_time}')
   # create /data/done.txt' file to indicate that calculation is finished
-  open('/data/done.txt', 'a').close()
+  open(COMPLETE_CALCULATION_FILE, 'a').close()
+
+
+# Main function
+if __name__ == '__main__':
+  user_params = parse_xml_to_object()
+  simflex_params, releases_params = parse_csv_to_object()
+  parse_messages(
+      f"Calculation {user_params['calc_id']} for series {user_params['series_id']} started.")
+  start_calc_time = datetime.now()
+
+  # Create simflex input folder and parse simflex input files
+  parse_simflex_inputs(simflex_params, user_params)
+
+  # Process each release from the releases_params by running FLEXPART
+  process_releases(releases_params, user_params, start_calc_time)
+
+  run_simflex_calculation(user_params['calc_id'], user_params['series_id'])
+  finish_calculation(start_calc_time)

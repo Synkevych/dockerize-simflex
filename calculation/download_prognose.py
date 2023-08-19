@@ -9,7 +9,6 @@ from helper import parse_messages, write_to_file, create_folder
 # 2 month equal to 44 Gb / calc speed and time needed to downloads this data
 
 # URL example: https://www.ncei.noaa.gov/data/global-forecast-system/access/grid-003-1.0-degree/analysis/202104/20210417/gfs_3_20210417_1800_006.grb2
-# should be changed to: https://data.rda.ucar.edu/ds083.2/grib2/2022/2022.04/fnl_20220419_12_00.grib2'
 
 HHMMSS = ['030000', '060000', '090000', '120000',
           '150000', '180000', '210000', '000000']
