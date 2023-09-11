@@ -284,7 +284,7 @@ def process_releases(releases_params, user_params, start_calc_time):
   # First date from user last is the last release date + 3 hours
   download_data(user_params['start_date_time'], end_release_date)
 
-  for param in releases_params:
+  for i, param in enumerate(releases_params):
     id = param['id']
     nuclide_name = param['species_name']
     default_flexpart_file_path = f"{basename}/output/{output_filename_prefix}.nc"
@@ -297,7 +297,7 @@ def process_releases(releases_params, user_params, start_calc_time):
       log_file_name = 'output.log'
       parse_releases_file(param)
       parse_messages(
-          f'FLEXPART running calculation for measurement id {id} (total {len(releases_params)}).')
+          f'FLEXPART running calculation for measurement {i+1} (id {id}) total {len(releases_params)}.')
       rc = check_output(f"FLEXPART_MPI > {log_file_name} 2>&1", shell=True)
       try:
         with open(log_file_name, 'r') as log_file:
@@ -307,10 +307,10 @@ def process_releases(releases_params, user_params, start_calc_time):
             if os.path.isfile(default_flexpart_file_path):
               os.popen(f"cp {default_flexpart_file_path} {new_flexpart_file_path}")
               parse_table_srs_file(id, new_flexpart_file_path)
-              parse_messages(f"FLEXPART completed calculation for measurement id {id}.")
+              parse_messages(f"FLEXPART completed calculation for measurement id {i+1}.")
             else:
               parse_messages(
-                  f"flexpart_error: Calculation didn't complete successfully for {id} release, check the output/input params.", True)
+                  f"flexpart_error: Calculation didn't complete successfully for {i+1} release, check the output/input params.", True)
           else:
             parse_messages(
                 "flexpart_error: Something went wrong when running FLEXPART.", True)
@@ -322,7 +322,7 @@ def process_releases(releases_params, user_params, start_calc_time):
     else:
         parse_table_srs_file(id, new_flexpart_file_path)
         parse_messages(
-            f'Skip calculation, output file for {id} release exist.')
+            f'Skip calculation, output file for {i+1} release exist.')
 
   parse_messages(
       f"FLEXPART finished all calculations, it took {datetime.now()-start_calc_time}.\n")
