@@ -11,7 +11,8 @@
     - [Debugging](#debugging)
   - [Resources](#resources)
 
-Flexpart containerization with simflex.  
+Flexpart containerization with simflex.
+SIMFLEX – Source Inversion Module-FLEXPART.  
 To make Flexpart work you should install all required libraries and provide the required inputs. This project is created to make it easy and isolated from your work environment.
 
 ## Flexpart
