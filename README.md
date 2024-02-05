@@ -2,6 +2,7 @@
 
 - [dockerize-simflex](#dockerize-simflex)
   - [Flexpart](#flexpart)
+  - [How to test that docker image work](#how-to-test-that-docker-image-work)
   - [How parsing works](#how-parsing-works)
   - [How to use](#how-to-use)
   - [Changes from the origin](#changes-from-the-origin)
@@ -18,6 +19,19 @@ To make Flexpart work you should install all required libraries and provide the 
 ## Flexpart
 
 FLEXPART (“FLEXible PARTicle dispersion model”) is a Lagrangian transport and dispersion model suitable for simulating a large range of atmospheric transport processes. Apart from transport and turbulent diffusion, it is able to simulate dry and wet deposition, decay, linear chemistry; it can be used in forward or backward mode, with defined sources, or in a domain-filling setting. It can be used from local to global scale.
+
+## How to test that docker image work
+
+Tested for compatibility with 3 cores; if more than 3 cores are provided, an error will occur after the first calculation. In OpenStack, you can utilize `$(nproc)` to utilize all available cores.
+
+```sh
+# Assuming you are in the root folder of the git repository
+cp -rf flexpart_v10.4/test 1;
+docker build -t simflex:beta -f Dockerfile .;
+cd 1;
+mkdir output;
+docker run --privileged -d -v "$PWD":/data/ -v "$PWD/output/":/series/ --name calculation_$(basename "$(pwd)") simflex:beta
+```
 
 ## How parsing works
 

@@ -301,7 +301,7 @@ def process_releases(releases_params, user_params, start_calc_time):
           f'FLEXPART running calculation for measurement {i} (id {id}) total {release_count}.')
       # Run Flexpart parallel using mpi on all CPUs cores.
       rc = check_output(
-          f"mpirun -np $(nproc) FLEXPART_MPI > {log_file_name} 2>&1", shell=True)
+          f"mpirun -np 2 FLEXPART_MPI > {log_file_name} 2>&1", shell=True)
       try:
         with open(log_file_name, 'r') as log_file:
           lines = log_file.readlines()
