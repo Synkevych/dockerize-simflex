@@ -29,8 +29,8 @@ Tested for compatibility with 3 cores; if more than 3 cores are provided, an err
 cp -rf flexpart_v10.4/test 1;
 docker build -t simflex:beta -f Dockerfile .;
 cd 1;
-mkdir output;
-docker run --privileged -d -v "$PWD":/data/ -v "$PWD/output/":/series/ --name calculation_$(basename "$(pwd)") simflex:beta
+mkdir results;
+docker run --privileged -d -v "$PWD":/data/ -v "$PWD/results/":/series/ --name calculation_$(basename "$(pwd)") simflex:beta
 ```
 
 ## How parsing works
