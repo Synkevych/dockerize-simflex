@@ -271,6 +271,7 @@ def process_releases(releases_params, user_params, start_calc_time):
   end_release_date = releases_params[-1]['end_date_time'] + timedelta(hours=1)
   end_date_time_str = end_release_date.strftime('%Y%m%d%H%M%S')
   output_filename_prefix = f"grid_time_{end_date_time_str}"
+  release_count = len(releases_params)
 
   # Create output folder for FLEXPART calculation
   create_folder('output')
@@ -284,7 +285,7 @@ def process_releases(releases_params, user_params, start_calc_time):
   # First date from user last is the last release date + 3 hours
   download_data(user_params['start_date_time'], end_release_date)
 
-  for param in releases_params:
+  for i, param in enumerate(releases_params, start=1):
     id = param['id']
     nuclide_name = param['species_name']
     default_flexpart_file_path = f"{basename}/output/{output_filename_prefix}.nc"
@@ -294,29 +295,37 @@ def process_releases(releases_params, user_params, start_calc_time):
     create_folder(f"{series_dirpath}/{nuclide_name}")
 
     if not os.path.isfile(new_flexpart_file_path):
+      log_file_name = 'output.log'
       parse_releases_file(param)
       parse_messages(
-          f'FLEXPART running calculation for measurement id {id} (total {len(releases_params)}).')
-      rc = check_output("FLEXPART_MPI", shell=True)
-      parse_messages(rc.decode("utf-8"))
-      # Check if FLEXPART calculation completed successfully
-      if b'CONGRATULATIONS: YOU HAVE SUCCESSFULLY COMPLETED A FLEXPART MODEL RUN!' in rc:
-        if os.path.isfile(default_flexpart_file_path):
-          os.popen(
-              f"cp {default_flexpart_file_path} {new_flexpart_file_path}")
-          parse_table_srs_file(id, new_flexpart_file_path)
-          parse_messages(
-              f"FLEXPART completed calculation for measurement id {id}.")
-        else:
-          parse_messages(
-            f"flexpart_error: Calculation didn't complete successfully for {id} release, check the output/input params.", True)
-      else:
-        parse_messages(
-            "flexpart_error: Something went wrong when running FLEXPART.", True)
+          f'FLEXPART running calculation for measurement {i} (id {id}) total {release_count}.')
+      # Run Flexpart parallel using mpi on all CPUs cores.
+      rc = check_output(
+          f"mpirun -np 2 FLEXPART_MPI > {log_file_name} 2>&1", shell=True)
+      try:
+        with open(log_file_name, 'r') as log_file:
+          lines = log_file.readlines()
+          last_line = lines[-1]
+          if 'CONGRATULATIONS: YOU HAVE SUCCESSFULLY COMPLETED A FLEXPART MODEL RUN!' in last_line:
+            if os.path.isfile(default_flexpart_file_path):
+              os.popen(f"cp {default_flexpart_file_path} {new_flexpart_file_path}")
+              parse_table_srs_file(id, new_flexpart_file_path)
+              parse_messages(f"FLEXPART completed calculation for measurement id {i}.")
+            else:
+              parse_messages(
+                  f"flexpart_error: Calculation didn't complete successfully for {i} release, check the output/input params.", True)
+          else:
+            parse_messages(
+                "flexpart_error: Something went wrong when running FLEXPART.", True)
+      except FileNotFoundError:
+        print("flexpart_error: Log file {log_file_name} not found, calculation didn't complete successfully.")
+
+      except Exception as e:
+        print("flexpart_error: An error occurred when running FLEXPART.")
     else:
         parse_table_srs_file(id, new_flexpart_file_path)
         parse_messages(
-            f'Skip calculation, output file for {id} release exist.')
+            f'Skip calculation, output file for {i} release exist.')
 
   parse_messages(
       f"FLEXPART finished all calculations, it took {datetime.now()-start_calc_time}.\n")
