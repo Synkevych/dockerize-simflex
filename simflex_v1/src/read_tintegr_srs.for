@@ -109,9 +109,7 @@
             srsred=REAL(loutstep)*AllSRS(i)%srstsum(:,:,1)
              call fname_srs(fsrspattern,id_obs(i),fsrsname,200)
              curlen=len_trim(fsrsname)
-             series_dirpath = '/series/'//
-     &                        trim(adjustl(int2str(series_id)))//
-     &                        '/'//trim(nuclide_name)//'/'
+             series_dirpath = '/series/'//trim(nuclide_name)//'/'
               open(1022,FILE=series_dirpath//fsrsname(1:curlen),
      &                  FORM='UNFORMATTED')
               write(1022)nlon,nlat
