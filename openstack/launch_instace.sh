@@ -1,109 +1,173 @@
 #!/bin/bash
 
 HASH=`date --utc +%Y%m%d%H%M`; FLAVOR="d1.xlarge"; VMNAME="flexpart_${FLAVOR/./_}_${HASH}";
-TIME=$(date "+%d.%m.%Y-%H:%M:%S"); TIMER=30; KEY_PATH=.ssh/"${VMNAME}.key"
+TIME=$(date "+%d.%m.%Y-%H:%M:%S"); TIMER=30; KEY_PATH="/home/flexpart/.ssh/${VMNAME}.key"
 calculation_dir=$(pwd)
 done_file="$calculation_dir/done.txt"
 
-echo "calculation dir: $calculation_dir"
-cd ~/ || exit
-echo "home dir: $(pwd)"
+log_message() {
+  local message="$1"
+  local calc_log="$calculation_dir/calculations_server.log"
+  local vm_log="/home/flexpart/vm_launching.log"
+
+  echo "$message"
+  echo -e "$TIME $message" | tee -a "$calc_log" >> "$vm_log"
+}
+
+remove_vm() {
+  log_message "Preparing to remove the virtual machine $VMNAME ..."
+
+  if [ -f $KEY_PATH ]; then
+    rm $KEY_PATH
+    log_message "Private key file '$KEY_PATH' has been removed."
+  else
+    log_message "Private key file '$KEY_PATH' not found."
+  fi
+
+  # remove keypair if it exists
+  if openstack keypair show $VMNAME > /dev/null 2>&1; then
+    openstack keypair delete $VMNAME
+    log_message "Keypair ${VMNAME} has been deleted."
+  else
+    log_message "Keypair ${VMNAME} does not exist."
+  fi
+
+  # check if it the instance exists
+  if openstack server show $VMNAME > /dev/null 2>&1; then
+    openstack server stop $VMNAME && openstack server delete $VMNAME
+    log_message "Instance ${VMNAME} has been deleted."
+  else
+    log_message "Instance ${VMNAME} does not exist, canceling."
+  fi
+}
+
+# Define cleanup function for other errors
+cleanup() {
+    vm_created=$1
+
+    if [[ $# -eq 1 && $1 =~ ^[0-9]+$ ]]; then
+      log_message "Error: Command exited with status $1"
+    # Remove VM if it exists
+    elif [ "$vm_created" = true ]; then
+      remove_vm
+    fi
+    # Create a done.txt to indicate finishing the calculation
+    touch "$done_file"
+    exit 1
+}
+
+test_quotas() {
+  # Get flavor information
+  flavor_info=$(openstack flavor show $FLAVOR)
+
+  if [[ -z "$flavor_info" ]]; then
+    log_message "Error: Flavor information is empty, cant start instance."
+    cleanup false
+  fi
+
+  # Extract flavor cores and RAM
+  flavor_cores=$(echo "$flavor_info" | awk '/vcpus/ { print $4 }')
+  flavor_ram=$(echo "$flavor_info" | awk '/ram/ { print $4 }')
+
+  # Get Nova limits
+  limits=$(nova limits 2>/dev/null | awk '/Cores|Instances|RAM/')
+  # Extract all cores, used cores, all instances, used instances, all RAM, and used RAM
+  read all_cores used_cores all_instances used_instances all_ram used_ram <<< $(echo $limits | awk '{ print $6, $4, $13, $11, $20, $18 }')
+  if (( $used_cores + $flavor_cores > $all_cores )); then
+    log_message "Error: Core limit was reached! Your need to fire $(expr $all_cores - $used_cores + $flavor_cores ) cores or change the flavor. Canceling ..."
+	  cleanup false
+  fi
+
+  if (( $used_instances + 1 >= $all_instances )); then
+    log_message "Error: Instance limit was reached. You need to delete one of the instances. Canceling ..."
+    cleanup false
+  fi
+
+  if (( $used_ram + $flavor_ram > $all_ram )); then
+    log_message "Error: RAM limit was reached. You need to delete one of the instances or change the flavor. Canceling ...";
+    cleanup false
+  fi
+}
+
+log_message "Process ID: $$"
+
+# Trap errors and call cleanup function, it will delete VM and create done.txt
+trap 'cleanup true' ERR
+
+. /home/flexpart/.WRF-UNG # load openstack environment variables
 
 # Ensure calculation folder exists
 if [[ ! -d "$calculation_dir" ]]; then
-    echo "Error: Calculation folder '$calculation_dir' does not exist." >&2
-    exit 1
+    log_message "Error: Calculation folder '$calculation_dir' does not exist."
+    cleanup false
 fi
 
 # execute the test_quotas.sh script and provide the flavor name as an argument
-if ! ./test_quotas.sh $FLAVOR; then
-  echo "Error: Quotas are exceeded, canceling ..."
-  echo -e "$TIME Quotas are exceeded, canceling ...\n" >> vm_launching.log
-  exit 1
+if ! test_quotas; then
+  log_message "Error: Quotas are exceeded, canceling ..."
+  cleanup false
 fi
 
 # create a series dir if not exist
 xml_file="$calculation_dir/input/options.xml"
 if [ ! -f "$xml_file" ]; then
-    echo "Error: Input file options.xml does not exist: $xml_file"
-    exit 1
+    log_message "Error: File: $xml_file does not exist"
+    cleanup false
 fi
+
 series_id=$(grep -oP '<id_series>\K[0-9]+' "$xml_file" | sed 's/^0*//')
 series_path="/home/flexpart/series/$series_id"
-
 mkdir -p "$series_path"
-echo "Series path: $series_path"
-sed -i "7s@.*@SERIES_PATH=$series_path@" start_calculation.sh
+
 # provide the calculation directory name to the VM
-echo "Calculation path: $calculation_dir"
 sed -i "6s@.*@DIR_NAME=$calculation_dir@" start_calculation.sh
+log_message "Calculation path: $calculation_dir"
+sed -i "7s@.*@SERIES_PATH=$series_path@" start_calculation.sh
+log_message "Series path: $series_path"
 
 openstack keypair create $VMNAME >> $KEY_PATH; chmod 600 .ssh/"${VMNAME}.key"
 
-nova boot --flavor $FLAVOR\
-        --image 77a8fe4c-c0ea-4ec1-9723-11c8876325e7\
+instance_id=$(nova boot --flavor $FLAVOR\
+        --image f7eed42e-266d-4576-8ac6-b6dbbfa53233\
         --key-name $VMNAME\
         --security-groups d134acb2-e6bc-4c82-a294-9617fdf7bf07\
-	      --user-data start_calculation.sh\
-        $VMNAME
+        --user-data start_calculation.sh\
+        $VMNAME\
+        2>/dev/null | awk '/ id / {print $4}')
 
-echo -e "$TIME start creating VM $VMNAME, status - $STATUS\n" >> vm_launching.log
-total_iterations=$(wc -l < "$xml_file")
+# Check if instance creation was successful
+if [ -z "$instance_id" ]; then
+    log_message "Error: Failed to create instance."
+    cleanup true
+fi
 
-for i in `seq 1 3`; do
-  echo -ne "$i attempt to start VM \033[0K\r"
-	sleep $TIMER & wait
+log_message "$TIME start creating VM $VMNAME, status - $STATUS."
 
-  	STATUS=`openstack server list | grep $VMNAME | awk '{ print $6 }'`
-  	IP=`openstack server list | grep $VMNAME | awk '{ split($8, v, "="); print v[2]}'`
-  	SYSTEM=`openstack server list | grep $VMNAME | awk '{ print $10 $11 }'`
+while true; do
+  	STATUS=$(openstack server show --format value -c status $instance_id)
 
-  	if [ "x$STATUS" = "xACTIVE" ]; then
-		printf "VM $VMNAME is $STATUS, IP address $IP, system $SYSTEM\n"
-    echo "$TIME VM $VMNAME is $STATUS, IP address $IP, system $SYSTEM" >> vm_launching.log
-		printf "To connect use: ssh -i $KEY_PATH ubuntu@$IP\n"
-		echo -e "To connect use: ssh -i $KEY_PATH ubuntu@$IP\n" >> vm_launching.log
+    if [ "$STATUS" == "ACTIVE" ]; then
+     	IP=`openstack server show --format value -c addresses $instance_id | awk '{ split($1, v, "="); print v[2]}'`
 
-    # Main loop to check for done.txt creation
-    while [[ ! -f "$done_file" ]]; do
-        echo "Waiting for 'done.txt' file in '$calculation_dir'..." >&2
-        sleep "$TIMER"
-    done
-    echo "File 'done.txt' detected! Removing the VM $VMNAME" >&2
-    # TODO: add argument -test=true as a value from output to make it easy while testing
-	 ./delete_instance.sh $VMNAME
-    exit 0
-	fi
+      log_message "$TIME VM $VMNAME is $STATUS, IP address $IP"
+      log_message "To connect use: ssh -i $KEY_PATH ubuntu@$IP\n"
+
+        # Main loop to check for done.txt creation
+        log_message "Calculation for '$calculation_dir' and series '$series_path' on VM $VMNAME started."
+        log_message "Waiting for 'done.txt' file in '$calculation_dir'..."
+        while [[ ! -f "$done_file" ]]; do
+          sleep "$TIMER"
+        done
+        log_message "File 'done.txt' detected! Removing the VM $VMNAME"
+        # TODO: add argument -test=true as a value from output to make it easy while testing
+        remove_vm
+        exit 0
+        break
+    elif [ "$status" == "ERROR" ]; then
+        log_message "Error: Instance $VMNAME creation failed."
+        cleanup true
+    fi
+    sleep 5
 done
 
-if test -z "$STATUS"; then
-	echo "Launching $VMNAME failed"
-	echo -e "$TIME Launching VM $VMNAME failed\n" >> vm_launching.log
-else
-	printf "Launching $VMNAME failed with status: $STATUS"
-	echo -e "$TIME Launching VM $VMNAME failed\n" >> vm_launching.log
-fi
-
-private_key=".ssh/${VMNAME}.key"
-if [ -f $private_key ]; then
-	rm $private_key
-        echo "Private key file '$private_key' has been removed."
-else
-	echo "Private key file '$private_key' not found."
-fi
-
-# remove keypair if it exists
-if openstack keypair show $VMNAME > /dev/null 2>&1; then
-  openstack keypair delete $VMNAME
-  echo "Keypair ${VMNAME} has been deleted."
-else
-  echo "Keypair ${VMNAME} does not exist"
-fi
-
-# check if it the instance exists
-if openstack server show $VMNAME > /dev/null 2>&1; then
-  openstack server stop $VMNAME && openstack server delete $VMNAME
-  echo "Instance ${VMNAME} has been deleted."
-else
-  echo "Instance ${VMNAME} does not exist, canceling."
-fi
+trap - ERR

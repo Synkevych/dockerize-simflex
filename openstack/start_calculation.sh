@@ -12,7 +12,7 @@ export LD_LIBRARY_PATH=/home/ubuntu/flexpart_lib/lib:$LD_LIBRARY_PATH
 # mount DIR_NAME folder to /data
 sudo mount $NFS_SERVER:$DIR_NAME /data
 sudo mount $NFS_SERVER:$SERIES_PATH /series
-# could be removed in production 
+# could be removed in production
 sudo mount $NFS_SERVER:/home/flexpart/series/grid_data /grid_data
 
 echo "FLEXPART on $(hostname) uses $(nproc) cores, $(free -h | awk '/^Mem:/ {print $2}') RAM for calculation ${DIR_NAME}" >> /data/calculations_server.log
