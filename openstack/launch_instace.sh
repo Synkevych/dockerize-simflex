@@ -43,15 +43,17 @@ remove_vm() {
 
 # Define cleanup function for other errors
 cleanup() {
-    vm_created=$1
+    local vm_created=$1
+    local message=$2
 
     if [[ $# -eq 1 && $1 =~ ^[0-9]+$ ]]; then
-      log_message "Error: Command exited with status $1"
+      message="Command exited with status $1"
     # Remove VM if it exists
     elif [ "$vm_created" = true ]; then
       remove_vm
     fi
     # Create a done.txt to indicate finishing the calculation
+    log_message "launch_error: $message\n"
     touch "$done_file"
     exit 1
 }
@@ -61,8 +63,7 @@ test_quotas() {
   flavor_info=$(openstack flavor show $FLAVOR)
 
   if [[ -z "$flavor_info" ]]; then
-    log_message "Error: Flavor information is empty, cant start instance."
-    cleanup false
+    cleanup false "Flavor information is empty, can't start instance."
   fi
 
   # Extract flavor cores and RAM
@@ -74,18 +75,15 @@ test_quotas() {
   # Extract all cores, used cores, all instances, used instances, all RAM, and used RAM
   read all_cores used_cores all_instances used_instances all_ram used_ram <<< $(echo $limits | awk '{ print $6, $4, $13, $11, $20, $18 }')
   if (( $used_cores + $flavor_cores > $all_cores )); then
-    log_message "Error: Core limit was reached! Your need to fire $(expr $all_cores - $used_cores + $flavor_cores ) cores or change the flavor. Canceling ..."
-	  cleanup false
+	  cleanup false "Core limit was reached! Fire $(expr $used_cores + $flavor_cores - $all_cores ) cores or change the flavor. Canceling ..."
   fi
 
   if (( $used_instances + 1 >= $all_instances )); then
-    log_message "Error: Instance limit was reached. You need to delete one of the instances. Canceling ..."
-    cleanup false
+    cleanup false "Instance limit was reached. Delete one of the instances. Canceling ..."
   fi
 
   if (( $used_ram + $flavor_ram > $all_ram )); then
-    log_message "Error: RAM limit was reached. You need to delete one of the instances or change the flavor. Canceling ...";
-    cleanup false
+    cleanup false "RAM limit was reached. Delete one of the instances or change the flavor. Canceling ..."
   fi
 }
 
@@ -98,21 +96,18 @@ trap 'cleanup true' ERR
 
 # Ensure calculation folder exists
 if [[ ! -d "$calculation_dir" ]]; then
-    log_message "Error: Calculation folder '$calculation_dir' does not exist."
-    cleanup false
+    cleanup false "Calculation folder '$calculation_dir' does not exist."
 fi
 
 # execute the test_quotas.sh script and provide the flavor name as an argument
 if ! test_quotas; then
-  log_message "Error: Quotas are exceeded, canceling ..."
-  cleanup false
+  cleanup false "Quotas are exceeded, Canceling ..."
 fi
 
 # create a series dir if not exist
 xml_file="$calculation_dir/input/options.xml"
 if [ ! -f "$xml_file" ]; then
-    log_message "Error: File: $xml_file does not exist"
-    cleanup false
+    cleanup false "File $xml_file does not exist."
 fi
 
 series_id=$(grep -oP '<id_series>\K[0-9]+' "$xml_file" | sed 's/^0*//')
@@ -131,14 +126,13 @@ instance_id=$(nova boot --flavor $FLAVOR\
         --image f7eed42e-266d-4576-8ac6-b6dbbfa53233\
         --key-name $VMNAME\
         --security-groups d134acb2-e6bc-4c82-a294-9617fdf7bf07\
-        --user-data start_calculation.sh\
+        --user-data /usr/local/bin/start_calculation.sh\
         $VMNAME\
         2>/dev/null | awk '/ id / {print $4}')
 
 # Check if instance creation was successful
 if [ -z "$instance_id" ]; then
-    log_message "Error: Failed to create instance."
-    cleanup true
+    cleanup true "Failed to create instance."
 fi
 
 log_message "$TIME start creating VM $VMNAME, status - $STATUS."
@@ -164,8 +158,7 @@ while true; do
         exit 0
         break
     elif [ "$status" == "ERROR" ]; then
-        log_message "Error: Instance $VMNAME creation failed."
-        cleanup true
+        cleanup true "Instance $VMNAME creation failed."
     fi
     sleep 5
 done
