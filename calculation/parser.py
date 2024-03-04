@@ -30,9 +30,8 @@ def parse_xml_to_object(file=OPTIONS_FILE):
   xml_root = xml_tree.getroot()
   start_date_time_str = xml_root.find('imin').text
   start_date_time = datetime.strptime(start_date_time_str, '%Y-%m-%d %H:%M:%S')
-  # TODO: check if end date is needed
-  # end_date_time_str = xml_root.find('imax').text
-  # end_date_time = datetime.strptime(end_date_time_str, '%Y-%m-%d %H:%M:%S')
+  end_date_time_str = xml_root.find('imax').text
+  end_date_time = datetime.strptime(end_date_time_str, '%Y-%m-%d %H:%M:%S')
   nx = (xml_root.find('nx').text)
   ny = (xml_root.find('ny').text)
   min_height = xml_root.find('minheight').text if xml_root.find(
@@ -40,7 +39,7 @@ def parse_xml_to_object(file=OPTIONS_FILE):
 
   return {
       'start_date_time': start_date_time,
-      # 'end_date_time': end_date_time,
+      'end_date_time': end_date_time,
       'out_longitude': xml_root.find('se_lon').text,
       'out_latitude': xml_root.find('se_lat').text,
       'num_x_grid': nx,
@@ -111,7 +110,7 @@ def parse_csv_to_object(file=MEASUREMENTS_FILE):
 
 def parse_command_file(user_params):
   start_date_time = user_params['start_date_time']
-  end_date_time = releases_params[-1]['end_date_time'] + timedelta(hours=1)
+  end_date_time = user_params['end_date_time'] + timedelta(hours=1)
   command_body = f"""&COMMAND
  LDIRECT=              -1, ! Simulation direction in time   ; 1 (forward) or -1 (backward)
  IBDATE=         {start_date_time.strftime('%Y%m%d')}, ! Start date of the simulation   ; YYYYMMDD: YYYY=year, MM=month, DD=day
@@ -268,8 +267,8 @@ def parse_releases_file(releases_params):
 
 def process_releases(releases_params, user_params, start_calc_time):
   series_dirpath = f"/series/{user_params['series_id']}"
-  end_release_date = releases_params[-1]['end_date_time'] + timedelta(hours=1)
-  end_date_time_str = end_release_date.strftime('%Y%m%d%H%M%S')
+  end_date = user_params['end_date_time'] + timedelta(hours=1)
+  end_date_time_str = end_date.strftime('%Y%m%d%H%M%S')
   output_filename_prefix = f"grid_time_{end_date_time_str}"
   release_count = len(releases_params)
 
@@ -283,7 +282,7 @@ def process_releases(releases_params, user_params, start_calc_time):
   parse_pathnames_file()
 
   # First date from user last is the last release date + 3 hours
-  download_data(user_params['start_date_time'], end_release_date)
+  download_data(user_params['start_date_time'], end_date)
 
   for i, param in enumerate(releases_params, start=1):
     id = param['id']
